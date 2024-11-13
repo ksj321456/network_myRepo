@@ -1,10 +1,22 @@
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.List;
 
-public class DrawingServer {
+public class DrawingServer extends JFrame {
     private static final int PORT = 12345;
     private final List<ClientHandler> clients = new ArrayList<>();
+    private JTextArea t_display;
+
+    public DrawingServer() {
+        t_display = new JTextArea();
+        add(t_display);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1000, 500);
+        setVisible(true);
+    }
 
     public void startServer() {
         try {
@@ -39,7 +51,6 @@ public class DrawingServer {
 
                 String message;
                 while ((message = in.readLine()) != null) {
-                    System.out.println("좌표값: " + message);
                     broadcast(message, this);  // 다른 클라이언트들에게 좌표 전송
                 }
             } catch (IOException e) {
@@ -63,6 +74,11 @@ public class DrawingServer {
 
         private void sendMessage(String message) {
             out.println(message);
+        }
+
+        private void display(String message) {
+            t_display.append(message + "\n");
+            t_display.setCaretPosition(t_display.getDocument().getLength());
         }
     }
     public static void main(String[] args) {
