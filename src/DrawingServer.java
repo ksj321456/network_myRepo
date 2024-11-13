@@ -7,7 +7,7 @@ import java.util.List;
 
 public class DrawingServer extends JFrame {
     private static final int PORT = 12345;
-    private final List<ClientHandler> clients = new ArrayList<>();
+    private Vector<ClientHandler> clients = new Vector<>();
     private JTextArea t_display;
 
     public DrawingServer() {
@@ -18,10 +18,20 @@ public class DrawingServer extends JFrame {
         setVisible(true);
     }
 
+    private String getLocalAddress() {
+        String address = null;
+        try {
+            address = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+        return address;
+    }
+
     public void startServer() {
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
-            System.out.println("서버 시작");
+            printDisplay("서버가 시작되었습니다. " + getLocalAddress());
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -75,11 +85,10 @@ public class DrawingServer extends JFrame {
         private void sendMessage(String message) {
             out.println(message);
         }
-
-        private void display(String message) {
-            t_display.append(message + "\n");
-            t_display.setCaretPosition(t_display.getDocument().getLength());
-        }
+    }
+    private void printDisplay(String message) {
+        t_display.append(message + "\n");
+        t_display.setCaretPosition(t_display.getDocument().getLength());
     }
     public static void main(String[] args) {
         DrawingServer drawingServer = new DrawingServer();
