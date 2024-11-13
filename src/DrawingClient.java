@@ -89,7 +89,7 @@ public class DrawingClient extends JFrame {
                     int y1 = Integer.parseInt(coords[1]);
                     int x2 = Integer.parseInt(coords[2]);
                     int y2 = Integer.parseInt(coords[3]);
-                    drawPanel.addLine(x1, y1, x2, y2);  // 받은 좌표로 선 그리기
+                    drawPanel.addLine(x1, y1, x2, y2);  // 받은 좌표로 선 그리기.
                 }
             } catch (IOException e) {
                 e.printStackTrace();
