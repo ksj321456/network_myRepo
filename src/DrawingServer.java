@@ -22,7 +22,6 @@ public class DrawingServer {
         }
     }
 
-
     private class ClientHandler extends Thread {
         private final Socket socket;
         private PrintWriter out;
@@ -39,8 +38,14 @@ public class DrawingServer {
 
                 String message;
                 while ((message = in.readLine()) != null) {
-                    System.out.println("좌표값: " + message);
-                    broadcast(message, this);  // 다른 클라이언트들에게 좌표 전송
+                    String[] coords = message.split(",");
+                    if (coords.length == 4) {
+                        System.out.println("좌표값: " + message);
+                        broadcast(message, this);  // 다른 클라이언트들에게 좌표 전송
+                    } else {
+                        System.out.println("채팅 메시지: " + message);
+                        broadcast(message, this);  // 다른 클라이언트들에게 메시지 전송
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -65,6 +70,7 @@ public class DrawingServer {
             out.println(message);
         }
     }
+
     public static void main(String[] args) {
         DrawingServer drawingServer = new DrawingServer();
         drawingServer.startServer();
