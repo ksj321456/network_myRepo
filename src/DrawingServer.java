@@ -37,7 +37,7 @@ public class DrawingServer extends JFrame {
 
     private class ClientHandler extends Thread {
         private final Socket socket;
-        private PrintWriter out;
+        private ObjectOutputStream out;
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
@@ -46,22 +46,23 @@ public class DrawingServer extends JFrame {
         @Override
         public void run() {
             try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                out = new PrintWriter(socket.getOutputStream(), true);
+                ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+                out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 
-                String message;
-                while ((message = in.readLine()) != null) {
-                    String[] coords = message.split(",");
-                    if (coords.length == 4) {
-                        System.out.println("좌표값: " + message);
-                        broadcast(message, this);  // 다른 클라이언트들에게 좌표 전송
-                    } else {
-                        System.out.println("채팅 메시지: " + message);
-                        broadcast(message, this);  // 다른 클라이언트들에게 메시지 전송
+                Object message;
+                while ((message = in.readObject()) != null) {
+                    SketchingData data = (SketchingData) message;
+                    // 그리기 모드를 받았다면
+                    if (data.getMode() == SketchingData.LINE) {
+                        Line line = data.getLine();
+                        System.out.println("Line: " + line.x1 + ", " + line.y1 + " -> " + line.x2 + ", " + line.y2);
+                        broadcast(data, this); // 다른 클라이언트들에게 SketchingData 객체 전송
                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             } finally {
                 try {
                     socket.close();
@@ -71,16 +72,21 @@ public class DrawingServer extends JFrame {
             }
         }
 
-        private void broadcast(String message, ClientHandler sender) {
+        private void broadcast(SketchingData message, ClientHandler sender) {
             for (ClientHandler client : clients) {
                 if (client != sender) {  // 전송자를 제외하고 브로드캐스팅
-                    client.sendMessage(message);
+                    client.sendData(message);
                 }
             }
         }
 
-        private void sendMessage(String message) {
-            out.println(message);
+        private void sendData(SketchingData message) {
+            try {
+                out.writeObject(message);
+                out.flush();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
