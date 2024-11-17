@@ -24,39 +24,69 @@ public class DrawingClient extends JFrame {
 
         drawPanel = new DrawPanel();
         add(drawPanel, BorderLayout.CENTER);
-
-        // 마우스 드래그 이벤트로 좌표를 서버에 전송
-        drawPanel.addMouseMotionListener(new MouseAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (isDrawing && lastPoint != null) {  // 그리기 상태일 때만 좌표를 전송
-                    String message = lastPoint.x + "," + lastPoint.y + "," + e.getX() + "," + e.getY();
-                    out.println(message);  // 서버로 좌표 전송
-
-                    // 마우스 이벤트를 발생시킨 클라이언트는 즉시 좌표를 그림에 추가
-                    drawPanel.addLine(lastPoint.x, lastPoint.y, e.getX(), e.getY());
-                    lastPoint = new Point(e.getX(), e.getY());  // 마지막 좌표 갱신
-                }
-            }
-        });
-
-        // 마우스 눌렀을 때 그리기를 시작
-        drawPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                isDrawing = true;  // 그리기 시작
-                lastPoint = new Point(e.getX(), e.getY());  // 현재 좌표 저장
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                isDrawing = false;  // 그리기 상태 종료
-            }
-        });
+        DrawingThread drawingThread = new DrawingThread();
+        drawingThread.start();
 
         connectToServer();
         setVisible(true);
     }
+
+    // 그리기를 실행하는 Thread
+    private class DrawingThread extends Thread implements MouseMotionListener, MouseListener {
+        private MouseEvent currentEvent;
+
+        @Override
+        public void run() {
+            drawPanel.addMouseMotionListener(this);
+            drawPanel.addMouseListener(this);
+        }
+
+        // MouseMotionListener 구현
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (isDrawing && lastPoint != null) { // 그리기 상태일 때만 좌표를 전송
+                String message = lastPoint.x + "," + lastPoint.y + "," + e.getX() + "," + e.getY();
+                out.println(message); // 서버로 좌표 전송
+
+                // 마우스 이벤트를 발생시킨 클라이언트는 즉시 좌표를 그림에 추가
+                drawPanel.addLine(lastPoint.x, lastPoint.y, e.getX(), e.getY());
+                lastPoint = new Point(e.getX(), e.getY()); // 마지막 좌표 갱신
+            }
+        }
+
+        @Override
+        public void mouseMoved(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+
+        }
+
+        // MouseListener 구현
+        @Override
+        public void mousePressed(MouseEvent e) {
+            isDrawing = true; // 그리기 시작
+            lastPoint = new Point(e.getX(), e.getY()); // 현재 좌표 저장
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            isDrawing = false; // 그리기 상태 종료
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
+        }
+    }
+
 
     private void connectToServer() {
         try {
