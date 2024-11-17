@@ -1,10 +1,14 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.List;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 public class DrawingClient extends JFrame {
     private static final String SERVER_ADDRESS = "localhost";
@@ -13,19 +17,42 @@ public class DrawingClient extends JFrame {
     private Socket socket;
     private PrintWriter out;
     private DrawPanel drawPanel;    // 그림판 Panel
+    private ChatingListPanel chatingListPanel; // 채팅창 Panel
+    private String userId; // 사용자 ID
+    private LeftUserPanel leftUserPanel;
+    private RightUserPanel rightUserPanel;
+    private DrawingSetting drawingSetting;
 
     private boolean isDrawing = false;      // 그림 그리고 있는지 확인
     private Point lastPoint = null;  // 마지막 좌표
 
-    public DrawingClient() {
+    public DrawingClient(String userId) {
+        this.userId = userId;
+        setResizable(false);
         setTitle("Hansung Sketching");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         drawPanel = new DrawPanel();
-        add(drawPanel, BorderLayout.CENTER);
+        leftUserPanel = new LeftUserPanel();
+        rightUserPanel = new RightUserPanel();
+        chatingListPanel = new ChatingListPanel();
+        drawingSetting = new DrawingSetting();
+        InputPanel inputPanel = new InputPanel(this);
+
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(drawPanel, BorderLayout.CENTER);
+        centerPanel.add(leftUserPanel, BorderLayout.WEST);
+        centerPanel.add(rightUserPanel, BorderLayout.EAST);
+        centerPanel.add(drawingSetting, BorderLayout.NORTH);
+
+        add(centerPanel);
+
         DrawingThread drawingThread = new DrawingThread();
         drawingThread.start();
+
+        add(inputPanel, BorderLayout.SOUTH);
+        add(chatingListPanel, BorderLayout.EAST);
 
         connectToServer();
         setVisible(true);
@@ -88,6 +115,12 @@ public class DrawingClient extends JFrame {
     }
 
 
+    public void sendMessage(String message) {
+        String fullMessage = userId + ": " + message;
+        chatingListPanel.addMessage("나: " + message);
+        out.println(fullMessage);  // 서버로 메시지 전송
+    }
+
     private void connectToServer() {
         try {
             socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
@@ -115,11 +148,22 @@ public class DrawingClient extends JFrame {
             try {
                 while ((message = in.readLine()) != null) {
                     String[] coords = message.split(",");
-                    int x1 = Integer.parseInt(coords[0]);
-                    int y1 = Integer.parseInt(coords[1]);
-                    int x2 = Integer.parseInt(coords[2]);
-                    int y2 = Integer.parseInt(coords[3]);
-                    drawPanel.addLine(x1, y1, x2, y2);  // 받은 좌표로 선 그리기
+                    if (coords.length == 4) {
+                        int x1 = Integer.parseInt(coords[0]);
+                        int y1 = Integer.parseInt(coords[1]);
+                        int x2 = Integer.parseInt(coords[2]);
+                        int y2 = Integer.parseInt(coords[3]);
+                        drawPanel.addLine(x1, y1, x2, y2);  // 받은 좌표로 선 그리기
+                    } else {
+                        String[] parts = message.split(": ");
+                        if (parts.length == 2) {
+                            String senderId = parts[0];
+                            String chatMessage = parts[1];
+                            if (!senderId.equals(userId)) {
+                                chatingListPanel.addMessage(senderId + ": " + chatMessage);  // 상대방 메시지 추가
+                            }
+                        }
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -127,11 +171,9 @@ public class DrawingClient extends JFrame {
         }
     }
 
-
-    // 선을 표현하는 클래스
-
     public static void main(String[] args) {
-        DrawingClient drawingClient = new DrawingClient();
-        drawingClient.connectToServer();
+        String userId = JOptionPane.showInputDialog("사용자 ID를 입력하세요:"); // 다이얼로그로 사용자 ID 입력
+        DrawingClient drawingClient = new DrawingClient(userId);
+        //drawingClient.connectToServer();
     }
 }

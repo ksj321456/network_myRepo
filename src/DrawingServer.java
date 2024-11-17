@@ -1,10 +1,23 @@
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.List;
 
-public class DrawingServer {
+public class DrawingServer extends JFrame {
     private static final int PORT = 12345;
     private final List<ClientHandler> clients = new ArrayList<>();
+    private JTextArea t_display;
+
+    public DrawingServer() {
+        t_display = new JTextArea();
+        add(t_display);
+        setVisible(true);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1000,500);
+        setTitle("서버 GUI");
+    }
 
     public void startServer() {
         try {
@@ -22,7 +35,6 @@ public class DrawingServer {
         }
     }
 
-
     private class ClientHandler extends Thread {
         private final Socket socket;
         private PrintWriter out;
@@ -39,8 +51,14 @@ public class DrawingServer {
 
                 String message;
                 while ((message = in.readLine()) != null) {
-                    System.out.println("좌표값: " + message);
-                    broadcast(message, this);  // 다른 클라이언트들에게 좌표 전송
+                    String[] coords = message.split(",");
+                    if (coords.length == 4) {
+                        System.out.println("좌표값: " + message);
+                        broadcast(message, this);  // 다른 클라이언트들에게 좌표 전송
+                    } else {
+                        System.out.println("채팅 메시지: " + message);
+                        broadcast(message, this);  // 다른 클라이언트들에게 메시지 전송
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -65,6 +83,12 @@ public class DrawingServer {
             out.println(message);
         }
     }
+
+    private void printDisplay(String msg) {
+        t_display.append(msg + "\n");
+        t_display.setCaretPosition(t_display.getDocument().getLength());
+    }
+
     public static void main(String[] args) {
         DrawingServer drawingServer = new DrawingServer();
         drawingServer.startServer();
