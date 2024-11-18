@@ -149,8 +149,11 @@ public class DrawingClient extends JFrame {
             try {
                 while ((message = in.readObject()) != null) {
                     SketchingData data = (SketchingData) message;
-                    Line line = data.getLine();
-                    drawPanel.addLine(line.x1, line.y1, line.x2, line.y2);
+                    // 그리기 모드를 받았을 때
+                    if (data.getMode() == SketchingData.LINE) {
+                        Line line = data.getLine();
+                        drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2());
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();

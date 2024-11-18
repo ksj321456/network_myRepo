@@ -16,4 +16,28 @@ public class Line {
         this.x2 = x2;
         this.y2 = y2;
     }
+
+    public int getX1() {
+        return x1;
+    }
+
+    public int getY1() {
+        return y1;
+    }
+
+    public int getX2() {
+        return x2;
+    }
+
+    public int getY2() {
+        return y2;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public double getLineWidth() {
+        return lineWidth;
+    }
 }
