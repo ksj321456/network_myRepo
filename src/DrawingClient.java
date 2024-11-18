@@ -1,11 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.io.*;
 import java.net.Socket;
 
 public class DrawingClient extends JFrame {
@@ -13,10 +11,13 @@ public class DrawingClient extends JFrame {
     private static final int SERVER_PORT = 12345;
 
     private Socket socket;
-    private PrintWriter out;
+    private ObjectOutputStream out;
     private DrawPanel drawPanel;    // 그림판 Panel
     private ChatingListPanel chatingListPanel; // 채팅창 Panel
     private String userId; // 사용자 ID
+    private LeftUserPanel leftUserPanel;
+    private RightUserPanel rightUserPanel;
+    private DrawingSetting drawingSetting;
 
     private boolean isDrawing = false;      // 그림 그리고 있는지 확인
     private Point lastPoint = null;  // 마지막 좌표
@@ -29,59 +30,112 @@ public class DrawingClient extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         drawPanel = new DrawPanel();
+        leftUserPanel = new LeftUserPanel();
+        rightUserPanel = new RightUserPanel();
         chatingListPanel = new ChatingListPanel();
+        drawingSetting = new DrawingSetting();
         InputPanel inputPanel = new InputPanel(this);
 
-        add(drawPanel, BorderLayout.CENTER);
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(drawPanel, BorderLayout.CENTER);
+        centerPanel.add(leftUserPanel, BorderLayout.WEST);
+        centerPanel.add(rightUserPanel, BorderLayout.EAST);
+        centerPanel.add(drawingSetting, BorderLayout.NORTH);
+
+        add(centerPanel);
+
+        DrawingThread drawingThread = new DrawingThread();
+        drawingThread.start();
+
         add(inputPanel, BorderLayout.SOUTH);
         add(chatingListPanel, BorderLayout.EAST);
+        setVisible(true);
+        connectToServer();
 
-        // 마우스 드래그 이벤트로 좌표를 서버에 전송
-        drawPanel.addMouseMotionListener(new MouseAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (isDrawing && lastPoint != null) {  // 그리기 상태일 때만 좌표를 전송
-                    String message = lastPoint.x + "," + lastPoint.y + "," + e.getX() + "," + e.getY();
-                    out.println(message);  // 서버로 좌표 전송
+    }
 
-                    // 마우스 이벤트를 발생시킨 클라이언트는 즉시 좌표를 그림에 추가
-                    drawPanel.addLine(lastPoint.x, lastPoint.y, e.getX(), e.getY());
-                    lastPoint = new Point(e.getX(), e.getY());  // 마지막 좌표 갱신
+    // 그리기를 실행하는 Thread
+    private class DrawingThread extends Thread implements MouseMotionListener, MouseListener {
+        private MouseEvent currentEvent;
+
+        @Override
+        public void run() {
+            drawPanel.addMouseMotionListener(this);
+            drawPanel.addMouseListener(this);
+        }
+
+        // MouseMotionListener 구현
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            if (isDrawing && lastPoint != null) { // 그리기 상태일 때만 좌표를 전송
+                Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY());
+                SketchingData sketchingData = new SketchingData(SketchingData.LINE, line);
+
+                // 서버에 Line 객체 전송
+                try {
+                    out.writeObject(sketchingData);
+                    out.flush();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
                 }
             }
-        });
+        }
 
-        // 마우스 눌렀을 때 그리기를 시작
-        drawPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                isDrawing = true;  // 그리기 시작
-                lastPoint = new Point(e.getX(), e.getY());  // 현재 좌표 저장
-            }
+        @Override
+        public void mouseMoved(MouseEvent e) {
 
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                isDrawing = false;  // 그리기 상태 종료
-            }
-        });
+        }
 
-        connectToServer();
-        setVisible(true);
+        @Override
+        public void mouseClicked(MouseEvent e) {
+
+        }
+
+        // MouseListener 구현
+        @Override
+        public void mousePressed(MouseEvent e) {
+            isDrawing = true; // 그리기 시작
+            lastPoint = new Point(e.getX(), e.getY()); // 현재 좌표 저장
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            isDrawing = false; // 그리기 상태 종료
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent e) {
+
+        }
+
+        @Override
+        public void mouseExited(MouseEvent e) {
+
+        }
     }
+
 
     public void sendMessage(String message) {
         String fullMessage = userId + ": " + message;
+        SketchingData chatData = new SketchingData(SketchingData.CHAT, fullMessage);
         chatingListPanel.addMessage("나: " + message);
-        out.println(fullMessage);  // 서버로 메시지 전송
+
+        try {
+            out.writeObject(chatData);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
     }
 
     private void connectToServer() {
         try {
             socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-            out = new PrintWriter(socket.getOutputStream(), true);
-
+            out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+            //out.flush();
             Thread sendCoordsThread = new ReceiveThread(socket);
-            sendCoordsThread.start();
+            sendCoordsThread.start(); //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 미준수시 데드락 발생 가능성 있음.
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -90,37 +144,31 @@ public class DrawingClient extends JFrame {
 
     // 메세지를 수신하는 스레드
     private class ReceiveThread extends Thread {
-        private final BufferedReader in;
+        private ObjectInputStream in;
 
         public ReceiveThread(Socket socket) throws IOException {
-            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
         }
 
         @Override
         public void run() {
-            String message;
+            SketchingData data;
             try {
-                while ((message = in.readLine()) != null) {
-                    String[] coords = message.split(",");
-                    if (coords.length == 4) {
-                        int x1 = Integer.parseInt(coords[0]);
-                        int y1 = Integer.parseInt(coords[1]);
-                        int x2 = Integer.parseInt(coords[2]);
-                        int y2 = Integer.parseInt(coords[3]);
-                        drawPanel.addLine(x1, y1, x2, y2);  // 받은 좌표로 선 그리기
-                    } else {
-                        String[] parts = message.split(": ");
-                        if (parts.length == 2) {
-                            String senderId = parts[0];
-                            String chatMessage = parts[1];
-                            if (!senderId.equals(userId)) {
-                                chatingListPanel.addMessage(senderId + ": " + chatMessage);  // 상대방 메시지 추가
-                            }
-                        }
+                while ((data = (SketchingData) in.readObject()) != null) {
+                    // 그리기 모드를 받았을 때
+                    if (data.getMode() == SketchingData.LINE) {
+                        Line line = data.getLine();
+                        drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2());
+                    }
+                    // 채팅 모드를 받았을 때
+                    else if (data.getMode() == SketchingData.CHAT) {
+                        chatingListPanel.addMessage(data.getMessage());
                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             }
         }
     }
