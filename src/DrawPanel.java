@@ -24,7 +24,7 @@ public class DrawPanel extends JPanel {
 
         // 저장된 선들을 그리기
         for (Line line : lines) {
-            g.drawLine(line.x1, line.y1, line.x2, line.y2);
+            g.drawLine(line.getX1(), line.getY1(), line.getX2(), line.getY2());
         }
     }
 }
