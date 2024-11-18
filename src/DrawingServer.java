@@ -1,8 +1,8 @@
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DrawingServer extends JFrame {
@@ -11,18 +11,20 @@ public class DrawingServer extends JFrame {
     private JTextArea t_display;
 
     public DrawingServer() {
+
         t_display = new JTextArea();
-        add(t_display);
+        JScrollPane scrollPane = new JScrollPane(t_display);
+        add(scrollPane);
         setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000,500);
+        setSize(1000, 500);
         setTitle("서버 GUI");
     }
 
     public void startServer() {
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
-            System.out.println("서버 시작");
+            printDisplay("서버 시작");
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
@@ -46,23 +48,30 @@ public class DrawingServer extends JFrame {
         @Override
         public void run() {
             try {
-                ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+                //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 순서 바뀌면 데드락 발생.
+                //현재 이 소켓이, ObjectInputStream을 생성하기 전에 헤더 정보를 수신하면 ObjectInputStream은 스트림 헤더를 기대하지 않았기 때문에 블록 상태에 빠지기때문.
                 out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                //out.flush();
+                ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
 
-                Object message;
-                while ((message = in.readObject()) != null) {
-                    SketchingData data = (SketchingData) message;
-                    // 그리기 모드를 받았다면
+
+                SketchingData data;
+                while ((data = (SketchingData) in.readObject()) != null) {
+                    //채팅 메시지를 받았을 때
+                    printDisplay("클라이언트로부터 데이터 수신");
                     if (data.getMode() == SketchingData.LINE) {
                         Line line = data.getLine();
-                        System.out.println("Line: " + line.getX1() + ", " + line.getY1() + " -> " + line.getX2() + ", " + line.getY2());
-                        broadcast(data, this); // 다른 클라이언트들에게 SketchingData 객체 전송
+                        printDisplay("그리기 좌표: " + line.getX1() + ", " + line.getY1() + ", " + line.getX2() + ", " + line.getY2());
+                        broadcast(data, this);
+                    }
+                    //스케치 데이터를 받았을 때
+                    else if (data.getMode() == SketchingData.CHAT) {
+                        printDisplay("채팅 메시지: " + data.getMessage());
+                        broadcastOthers(data, this);
                     }
                 }
-            } catch (IOException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
             } finally {
                 try {
                     socket.close();
@@ -72,17 +81,23 @@ public class DrawingServer extends JFrame {
             }
         }
 
-        private void broadcast(SketchingData message, ClientHandler sender) {
+        private void broadcast(SketchingData data, ClientHandler sender) {
+            for (ClientHandler client : clients)
+                client.sendData(data);
+
+        }
+
+        private void broadcastOthers(SketchingData data, ClientHandler sender) {
             for (ClientHandler client : clients) {
                 if (client != sender) {  // 전송자를 제외하고 브로드캐스팅
-                    client.sendData(message);
+                    client.sendData(data);
                 }
             }
         }
 
-        private void sendData(SketchingData message) {
+        private void sendData(SketchingData data) {
             try {
-                out.writeObject(message);
+                out.writeObject(data);
                 out.flush();
             } catch (IOException e) {
                 throw new RuntimeException(e);

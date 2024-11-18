@@ -1,6 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -50,9 +49,9 @@ public class DrawingClient extends JFrame {
 
         add(inputPanel, BorderLayout.SOUTH);
         add(chatingListPanel, BorderLayout.EAST);
-
-        connectToServer();
         setVisible(true);
+        connectToServer();
+
     }
 
     // 그리기를 실행하는 Thread
@@ -118,17 +117,25 @@ public class DrawingClient extends JFrame {
 
     public void sendMessage(String message) {
         String fullMessage = userId + ": " + message;
+        SketchingData chatData = new SketchingData(SketchingData.CHAT, fullMessage);
         chatingListPanel.addMessage("나: " + message);
-        out.println(fullMessage);  // 서버로 메시지 전송
+
+        try {
+            out.writeObject(chatData);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
     }
 
     private void connectToServer() {
         try {
             socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
             out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-
+            //out.flush();
             Thread sendCoordsThread = new ReceiveThread(socket);
-            sendCoordsThread.start();
+            sendCoordsThread.start(); //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 미준수시 데드락 발생 가능성 있음.
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -145,14 +152,17 @@ public class DrawingClient extends JFrame {
 
         @Override
         public void run() {
-            Object message;
+            SketchingData data;
             try {
-                while ((message = in.readObject()) != null) {
-                    SketchingData data = (SketchingData) message;
+                while ((data = (SketchingData) in.readObject()) != null) {
                     // 그리기 모드를 받았을 때
                     if (data.getMode() == SketchingData.LINE) {
                         Line line = data.getLine();
                         drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2());
+                    }
+                    // 채팅 모드를 받았을 때
+                    else if (data.getMode() == SketchingData.CHAT) {
+                        chatingListPanel.addMessage(data.getMessage());
                     }
                 }
             } catch (IOException e) {
