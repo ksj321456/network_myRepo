@@ -55,7 +55,7 @@ public class DrawingServer extends JFrame {
                     // 그리기 모드를 받았다면
                     if (data.getMode() == SketchingData.LINE) {
                         Line line = data.getLine();
-                        System.out.println("Line: " + line.x1 + ", " + line.y1 + " -> " + line.x2 + ", " + line.y2);
+                        System.out.println("Line: " + line.getX1() + ", " + line.getY1() + " -> " + line.getX2() + ", " + line.getY2());
                         broadcast(data, this); // 다른 클라이언트들에게 SketchingData 객체 전송
                     }
                 }
