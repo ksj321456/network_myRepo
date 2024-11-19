@@ -4,10 +4,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 public class DrawingServer extends JFrame {
     private static final int PORT = 12345;
-    private final List<ClientHandler> clients = new ArrayList<>();
+    private Vector<ClientHandler> clients = new Vector<>();
     private JTextArea t_display;
 
     public DrawingServer() {

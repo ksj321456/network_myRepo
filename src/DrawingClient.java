@@ -66,7 +66,13 @@ public class DrawingClient extends JFrame {
         @Override
         public void mouseDragged(MouseEvent e) {
             if (isDrawing && lastPoint != null) { // 그리기 상태일 때만 좌표를 전송
-                Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY());
+                Color selectedColor = drawingSetting.getSelectedColor();
+                float selectedWidth = drawingSetting.getSelectedLineWidth();
+
+                // Line 객체 생성 및 색깔 설정
+                Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY(), selectedColor, selectedWidth);
+
+                // SketchingData 객체 생성
                 SketchingData sketchingData = new SketchingData(SketchingData.LINE, line);
 
                 // 서버에 Line 객체 전송
@@ -79,7 +85,6 @@ public class DrawingClient extends JFrame {
 
                 // 마지막 좌표를 현재 좌표로 업데이트
                 lastPoint = new Point(e.getX(), e.getY());
-
             }
         }
 
@@ -166,7 +171,7 @@ public class DrawingClient extends JFrame {
                     // 그리기 모드를 받았을 때
                     if (data.getMode() == SketchingData.LINE) {
                         Line line = data.getLine();
-                        drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2());
+                        drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2(), line.getColor(), line.getLineWidth());
                     }
                     // 채팅 모드를 받았을 때
                     else if (data.getMode() == SketchingData.CHAT) {
