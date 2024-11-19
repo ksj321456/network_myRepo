@@ -12,16 +12,13 @@ public class DrawingSetting extends JPanel {
     private JLabel word;
 
     public DrawingSetting() {
-        // Set layout for the panel
         setLayout(new FlowLayout());
 
-        // Initialize components
         colorBox = new JComboBox<>(lineColor);
         strokeBox = new JComboBox<>(lineStroke);
         eraser = new JButton("지우개");
         word = new JLabel("???");
 
-        // Add components to the panel
         add(colorBox);
         add(strokeBox);
         add(eraser);
@@ -59,6 +56,7 @@ public class DrawingSetting extends JPanel {
                 return 5;
             case "10px":
                 return 10;
+            // 기본 굵기 1
             default:
                 return 1;
         }

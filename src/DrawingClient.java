@@ -69,7 +69,7 @@ public class DrawingClient extends JFrame {
                 Color selectedColor = drawingSetting.getSelectedColor();
                 float selectedWidth = drawingSetting.getSelectedLineWidth();
 
-                // Line 객체 생성 및 색깔 설정
+                // Line 객체 생성 및 색깔, 굵기 설정
                 Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY(), selectedColor, selectedWidth);
 
                 // SketchingData 객체 생성
