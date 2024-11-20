@@ -22,6 +22,7 @@ public class DrawingClient extends JFrame {
     private boolean isDrawing = false;      // 그림 그리고 있는지 확인
     private Point lastPoint = null;  // 마지막 좌표
 
+
     public DrawingClient(String userId) {
         this.userId = userId;
         setResizable(false);
@@ -136,6 +137,19 @@ public class DrawingClient extends JFrame {
         }
     }
 
+//UserPanel에 사용자 추가하는 메서드
+private void addUser(String userId) {
+    if (!leftUserPanel.addUser(userId, 0)) {
+        rightUserPanel.addUser(userId, 0);
+    }
+}
+    //UserPanel에 사용자 제거하는 메서드
+    private void removeUser(String userId) {
+        if (!leftUserPanel.removeUser(userId)) {
+            rightUserPanel.removeUser(userId);
+        }
+    }
+
     private void connectToServer() {
         try {
             socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
@@ -149,6 +163,8 @@ public class DrawingClient extends JFrame {
             Thread sendCoordsThread = new ReceiveThread(socket);
             sendCoordsThread.start(); //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 미준수시 데드락 발생 가능성 있음.
 
+            // 서버에 접속한 사용자를 UserPanel에 추가
+            addUser(userId);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -176,6 +192,9 @@ public class DrawingClient extends JFrame {
                     // 채팅 모드를 받았을 때
                     else if (data.getMode() == SketchingData.CHAT) {
                         chatingListPanel.addMessage(data.getMessage());
+                    }
+                    else if (data.getMode() == SketchingData.DISCONNECT) {
+                        removeUser(data.getMessage());
                     }
                 }
             } catch (IOException e) {

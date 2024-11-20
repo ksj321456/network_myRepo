@@ -2,8 +2,6 @@ import javax.swing.*;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Vector;
 
 public class DrawingServer extends JFrame {
@@ -75,6 +73,9 @@ public class DrawingServer extends JFrame {
                 e.printStackTrace();
             } finally {
                 try {
+                    // 클라이언트 소켓이 종료될 때 DISCONNECT 메시지 처리
+                    SketchingData disconnectData = new SketchingData(SketchingData.DISCONNECT, socket.getInetAddress().toString());
+                    broadcastOthers(disconnectData, this);
                     socket.close();
                 } catch (IOException e) {
                     e.printStackTrace();

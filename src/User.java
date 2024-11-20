@@ -2,16 +2,27 @@ import javax.swing.*;
 import java.awt.*;
 
 public class User extends JPanel {
-    private JTextField userId;
-    private JTextField score;
+    private String userId;
+    private JLabel userLabel;
+    private JLabel scoreLabel;
 
     public User() {
         setLayout(new GridLayout(2, 0));
-        userId = new JTextField("ID", 10);
-        score = new JTextField("0", 2);
-        add(userId);
-        add(score);
-        userId.setEnabled(false);
-        score.setEnabled(false);
+        setLayout(new GridLayout(2, 0));
+        userLabel = new JLabel();
+        scoreLabel = new JLabel();
+        add(userLabel);
+        add(scoreLabel);
     }
+
+    public void setUser(String userId, int score) {
+        this.userId = userId;
+        userLabel.setText("ID: " + userId);
+        scoreLabel.setText("점수: " + score);
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
 }

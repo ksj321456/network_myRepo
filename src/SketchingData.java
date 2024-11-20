@@ -3,7 +3,7 @@ import java.io.Serializable;
 public class SketchingData implements Serializable {
     public static final int LINE = 1;
     public static final int CHAT = 2;
-
+    public static final int DISCONNECT = 3;
     private Line line;
     private int mode;
     private String message; // 채팅 메시지
