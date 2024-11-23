@@ -30,19 +30,31 @@ public class ClientMain extends JFrame {
 
     private void buildGUI() {
 
-
         mainPanel.setBackground(new Color(240, 248, 255));
         mainPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        mainPanel.setLayout(null); // 절대 위치 레이아웃 사용
+
+        // 연필 아이콘 추가
+        ImageIcon pencilIcon = new ImageIcon("pencil.png"); // 이미지 파일 경로를 "pencil.png"로 변경
+        JLabel l_PencilIcon = new JLabel(pencilIcon);
+        l_PencilIcon.setBounds(20, 20, 100, 100); // 아이콘 위치 및 크기 조정
+        mainPanel.add(l_PencilIcon);
 
         JLabel l_Title = new JLabel("Hansung Sketch");
         l_Title.setFont(new Font("Comic Sans MS", Font.BOLD, 40));
 
         // JLabel의 크기를 텍스트에 맞게 조절
         l_Title.setSize(l_Title.getPreferredSize());
-        l_Title.setLocation(75, 30);
+        l_Title.setLocation(75, 30); // 제목 위치 조정
 
 
         mainPanel.add(l_Title);
+
+        // 물결 밑줄 추가
+        JLabel l_Underline = new JLabel("~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        l_Underline.setFont(new Font("MV Boli", Font.PLAIN, 20)); // 폰트 변경
+        l_Underline.setBounds(70, 80, 350, 30); // 밑줄 위치 및 크기 조정
+        mainPanel.add(l_Underline);
 
         JLabel l_UserName = new JLabel("Player Name");
         l_UserName.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 16));
@@ -126,7 +138,6 @@ public class ClientMain extends JFrame {
         });
         mainPanel.add(btnConnect);
 
-        mainPanel.setLayout(null);
         setContentPane(mainPanel);
     }
 
@@ -157,5 +168,4 @@ public class ClientMain extends JFrame {
             }
         });
     }
-
 }
