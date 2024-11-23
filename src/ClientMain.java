@@ -22,7 +22,7 @@ public class ClientMain extends JFrame {
         // 화면의 가로세로 중앙 계산
         int centerX = (int) (screenSize.getWidth() - 550) / 2;
         int centerY = (int) (screenSize.getHeight() - 600) / 2;
-        setBounds(centerX, centerY, 550, 600);
+        setBounds(centerX, centerY, 500, 500);
         /*-------------------------------------*/
         buildGUI();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -39,7 +39,7 @@ public class ClientMain extends JFrame {
 
         // JLabel의 크기를 텍스트에 맞게 조절
         l_Title.setSize(l_Title.getPreferredSize());
-        l_Title.setLocation(95, 70);
+        l_Title.setLocation(75, 30);
 
 
         mainPanel.add(l_Title);
@@ -47,19 +47,19 @@ public class ClientMain extends JFrame {
         JLabel l_UserName = new JLabel("Player Name");
         l_UserName.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 16));
 
-        l_UserName.setBounds(138, 209, 102, 33);
+        l_UserName.setBounds(113, 139, 102, 33);
         mainPanel.add(l_UserName);
 
         t_UserName = new JTextField();
         t_UserName.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
         t_UserName.setHorizontalAlignment(SwingConstants.CENTER);
-        t_UserName.setBounds(269, 209, 116, 33);
+        t_UserName.setBounds(244, 139, 116, 33);
         mainPanel.add(t_UserName);
         t_UserName.setColumns(10);
 
         JLabel lblIpAddress = new JLabel("IP Address");
         lblIpAddress.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 16));
-        lblIpAddress.setBounds(138, 283, 102, 33);
+        lblIpAddress.setBounds(113, 213, 102, 33);
         mainPanel.add(lblIpAddress);
 
         t_IpAddress = new JTextField();
@@ -67,12 +67,12 @@ public class ClientMain extends JFrame {
         t_IpAddress.setHorizontalAlignment(SwingConstants.CENTER);
         t_IpAddress.setText("127.0.0.1");
         t_IpAddress.setColumns(10);
-        t_IpAddress.setBounds(269, 283, 116, 33);
+        t_IpAddress.setBounds(244, 213, 116, 33);
         mainPanel.add(t_IpAddress);
 
         JLabel lblPortNumber = new JLabel("Port Number");
         lblPortNumber.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 16));
-        lblPortNumber.setBounds(138, 362, 102, 33);
+        lblPortNumber.setBounds(113, 292, 102, 33);
         mainPanel.add(lblPortNumber);
 
         t_PortNumber = new JTextField();
@@ -80,10 +80,10 @@ public class ClientMain extends JFrame {
         t_PortNumber.setText("12345");
         t_PortNumber.setHorizontalAlignment(SwingConstants.CENTER);
         t_PortNumber.setColumns(10);
-        t_PortNumber.setBounds(269, 362, 116, 33);
+        t_PortNumber.setBounds(244, 292, 116, 33);
         mainPanel.add(t_PortNumber);
 
-        JButton btnConnect = new JButton("Game Start");
+        JButton btnConnect = new JButton("Let's Start!");
 
 // 폰트 변경
         btnConnect.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
@@ -113,7 +113,7 @@ public class ClientMain extends JFrame {
             }
         });
 
-        btnConnect.setBounds(181, 445, 162, 48);
+        btnConnect.setBounds(156, 375, 162, 48);
 
         btnConnect.addActionListener(new ActionListener() {
             @Override
