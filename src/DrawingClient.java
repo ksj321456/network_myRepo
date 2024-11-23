@@ -30,7 +30,8 @@ public class DrawingClient extends JFrame {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
         buildGUI(); // GUI 구성
-        connectToServer();
+        connectToServer(); // 서버에 접속요청
+        sendUserID(); // 서버에 사용자 ID 전송
     }
 
     private void buildGUI() {
@@ -160,7 +161,7 @@ public class DrawingClient extends JFrame {
                 sendCoordsThread.start(); //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 미준수시 데드락 발생 가능성 있음.
 
                 // 서버에 접속한 사용자를 UserPanel에 추가
-                addUser(userId);
+                //addUser(userId); // 클라이언트가 직접 추가하는게 아닌, 서버에서 현재 접속자들 받아오는 방식으로 변경.
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -225,9 +226,9 @@ public class DrawingClient extends JFrame {
 //            System.exit(0);
 //        }
 //    }
-    private void send(SketchingData msg) {
+    private void send(SketchingData data) {
         try {
-            out.writeObject(msg);
+            out.writeObject(data);
             out.flush();
         } catch (IOException e) {
             System.err.println("클라이언트 일반 전송 오류> " + e.getMessage());
@@ -235,6 +236,20 @@ public class DrawingClient extends JFrame {
         }
     }
 
+    private void sendMesssage(String message) { // 행단위의 문자열 전송 대신에, send() 메서드를 통해서 하나의 채팅메시지인 ChatMsg 객체를 전송하는 방식으로 변경.
+        String fullMessage = userId + ": " + message;
+        SketchingData chatData = new SketchingData(SketchingData.MODE_CHAT, userId, fullMessage);
+        //chatingListPanel.addMessage("나: " + message); 추후 서버로부터 브로드케스팅받고 -> 그 메시지모드가 채팅이고 + userId가 나랑 같다면 => 채팅리스트에 "나: "로 추가하는 방식으로 변경.
+        if (message.isEmpty())
+            return;
+
+        send(new SketchingData(SketchingData.MODE_CHAT, userId, fullMessage));
+        // ChatMsg 객체로 만들어서 전송.
+    }
+
+    private void sendUserID() {
+        send(new SketchingData(SketchingData.MODE_LOGIN, userId)); // 서버에게 로그인 모드&사용자 아이디값을 전달. 서버가 이 아이디값을 통해 클라이언트를 식별.
+    }
 
 //
 //    public static void main(String[] args) {
