@@ -164,7 +164,7 @@ public class DrawingClient extends JFrame {
                 //addUser(userId); // 클라이언트가 직접 추가하는게 아닌, 서버에서 현재 접속자들 받아오는 방식으로 변경.
 
             } catch (IOException e) {
-                e.printStackTrace();
+                chatingListPanel.addMessage("입력 스트림이 열리지 않음");
             }
         }).start();
     }
@@ -179,25 +179,42 @@ public class DrawingClient extends JFrame {
 
         @Override
         public void run() {
-            SketchingData data;
-            try {
-                while ((data = (SketchingData) in.readObject()) != null) {
-                    // 그리기 모드를 받았을 때
-                    if (data.getMode() == SketchingData.MODE_LINE) {
-                        Line line = data.getLine();
-                        drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2(), line.getColor(), line.getLineWidth());
+
+
+            while (true) {
+                try {
+                    SketchingData data = (SketchingData) in.readObject();
+
+                    if (data == null) {// 서버측에서 소켓연결을 종료하여 스트림이 닫힌경우.
+                        disconnect();
+                        chatingListPanel.addMessage("서버 연결 끊김");
+                        return;
                     }
-                    // 채팅 모드를 받았을 때
-                    else if (data.getMode() == SketchingData.MODE_CHAT) {
-                        chatingListPanel.addMessage(data.getMessage());
-                    } else if (data.getMode() == SketchingData.MODE_LOGOUT) {
-                        removeUser(data.getUserID());
+
+                    switch (data.getMode()) { // 수신된 메시지의 모드값에 따라 다른 처리.
+                        case SketchingData.MODE_CHAT: // 채팅모드라면, 서버로부터 전달받은 id 와 문자열 메시지를 화면에 출력.
+                            if (data.getUserID().equals(userId)) {
+                                chatingListPanel.addMessage("나: " + data.getMessage());
+                            } else {
+                                chatingListPanel.addMessage(data.getUserID() + ": " + data.getMessage());
+                            }
+                            break;
+
+                        case SketchingData.MODE_LINE:  // 그리기 모드를 받았을 때
+                            Line line = data.getLine();
+                            drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2(), line.getColor(), line.getLineWidth());
+                            break;
+
                     }
+//                    else if (data.getMode() == SketchingData.MODE_LOGOUT) {
+//                        removeUser(data.getUserID());
+//                    }
+                } catch (IOException e) {
+                    chatingListPanel.addMessage("연결을 종료했습니다.");
+                } catch (ClassNotFoundException e) {
+                    chatingListPanel.addMessage("잘못된 객체가 전달되었습니다.");
+                    throw new RuntimeException(e);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
             }
         }
     }
