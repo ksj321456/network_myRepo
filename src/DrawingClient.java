@@ -7,14 +7,16 @@ import java.io.*;
 import java.net.Socket;
 
 public class DrawingClient extends JFrame {
-    private static final String SERVER_ADDRESS = "localhost";
-    private static final int SERVER_PORT = 12345;
+    //    private static final String SERVER_ADDRESS = "localhost";
+//    private static final int SERVER_PORT = 12345;
+    private String serverAddress = "localhost";
+    private int serverPort = 12345;
+    private String userId; // 사용자 ID
 
     private Socket socket;
     private ObjectOutputStream out;
     private DrawPanel drawPanel;    // 그림판 Panel
     private ChatingListPanel chatingListPanel; // 채팅창 Panel
-    private String userId; // 사용자 ID
     private LeftUserPanel leftUserPanel;
     private RightUserPanel rightUserPanel;
     private DrawingSetting drawingSetting;
@@ -23,11 +25,18 @@ public class DrawingClient extends JFrame {
     private Point lastPoint = null;  // 마지막 좌표
 
 
-    public DrawingClient(String userId) {
+    public DrawingClient(String userId, String serverAddress, int serverPort) {
         this.userId = userId;
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
+        buildGUI(); // GUI 구성
+        connectToServer();
+    }
+
+    private void buildGUI() {
         setResizable(false);
-        setTitle("Hansung Sketching");
-        setSize(800, 600);
+        setTitle("Hansung Sketch");
+        setSize(1400, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         drawPanel = new DrawPanel();
@@ -44,13 +53,9 @@ public class DrawingClient extends JFrame {
         centerPanel.add(drawingSetting, BorderLayout.NORTH);
 
         add(centerPanel);
-
-
         add(inputPanel, BorderLayout.SOUTH);
         add(chatingListPanel, BorderLayout.EAST);
         setVisible(true);
-        connectToServer();
-
     }
 
     // 그리기를 실행하는 Thread
@@ -137,12 +142,13 @@ public class DrawingClient extends JFrame {
         }
     }
 
-//UserPanel에 사용자 추가하는 메서드
-private void addUser(String userId) {
-    if (!leftUserPanel.addUser(userId, 0)) {
-        rightUserPanel.addUser(userId, 0);
+    //UserPanel에 사용자 추가하는 메서드
+    private void addUser(String userId) {
+        if (!leftUserPanel.addUser(userId, 0)) {
+            rightUserPanel.addUser(userId, 0);
+        }
     }
-}
+
     //UserPanel에 사용자 제거하는 메서드
     private void removeUser(String userId) {
         if (!leftUserPanel.removeUser(userId)) {
@@ -152,7 +158,7 @@ private void addUser(String userId) {
 
     private void connectToServer() {
         try {
-            socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+            socket = new Socket(serverAddress, serverPort);
             out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             //out.flush();
 
@@ -192,8 +198,7 @@ private void addUser(String userId) {
                     // 채팅 모드를 받았을 때
                     else if (data.getMode() == SketchingData.CHAT) {
                         chatingListPanel.addMessage(data.getMessage());
-                    }
-                    else if (data.getMode() == SketchingData.DISCONNECT) {
+                    } else if (data.getMode() == SketchingData.DISCONNECT) {
                         removeUser(data.getMessage());
                     }
                 }
@@ -204,10 +209,10 @@ private void addUser(String userId) {
             }
         }
     }
-
-    public static void main(String[] args) {
-        String userId = JOptionPane.showInputDialog("사용자 ID를 입력하세요:"); // 다이얼로그로 사용자 ID 입력
-        DrawingClient drawingClient = new DrawingClient(userId);
-        //drawingClient.connectToServer();
-    }
+//
+//    public static void main(String[] args) {
+//        String userId = JOptionPane.showInputDialog("사용자 ID를 입력하세요:"); // 다이얼로그로 사용자 ID 입력
+//        DrawingClient drawingClient = new DrawingClient(userId);
+//        //drawingClient.connectToServer();
+//    }
 }
