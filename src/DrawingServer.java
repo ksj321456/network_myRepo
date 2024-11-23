@@ -46,6 +46,7 @@ public class DrawingServer extends JFrame {
 
         @Override
         public void run() {
+            SketchingData data = null;
             try {
                 //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 순서 바뀌면 데드락 발생.
                 //현재 이 소켓이, ObjectInputStream을 생성하기 전에 헤더 정보를 수신하면 ObjectInputStream은 스트림 헤더를 기대하지 않았기 때문에 블록 상태에 빠지기때문.
@@ -54,17 +55,17 @@ public class DrawingServer extends JFrame {
                 ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
 
 
-                SketchingData data;
                 while ((data = (SketchingData) in.readObject()) != null) {
-                    //채팅 메시지를 받았을 때
+                    //스케치 데이터를 받았을 때
                     //printDisplay("클라이언트로부터 데이터 수신");
-                    if (data.getMode() == SketchingData.LINE) {
+                    if (data.getMode() == SketchingData.MODE_LINE) {
                         Line line = data.getLine();
                         //printDisplay("그리기 좌표: " + line.getX1() + ", " + line.getY1() + ", " + line.getX2() + ", " + line.getY2());
                         broadcast(data, this);
                     }
-                    //스케치 데이터를 받았을 때
-                    else if (data.getMode() == SketchingData.CHAT) {
+
+                    //채팅 메시지를 받았을 때
+                    else if (data.getMode() == SketchingData.MODE_CHAT) {
                         printDisplay("채팅 메시지: " + data.getMessage());
                         broadcastOthers(data, this);
                     }
@@ -73,9 +74,9 @@ public class DrawingServer extends JFrame {
                 e.printStackTrace();
             } finally {
                 try {
-                    // 클라이언트 소켓이 종료될 때 DISCONNECT 메시지 처리
-                    SketchingData disconnectData = new SketchingData(SketchingData.DISCONNECT, socket.getInetAddress().toString());
-                    broadcastOthers(disconnectData, this);
+                    // 클라이언트 소켓이 종료될 때 MODE_LOGOUT 메시지 처리
+                    SketchingData logoutData = new SketchingData(SketchingData.MODE_LOGOUT, data.getUserID(), socket.getInetAddress().toString());
+                    broadcastOthers(logoutData, this);
                     socket.close();
                 } catch (IOException e) {
                     e.printStackTrace();

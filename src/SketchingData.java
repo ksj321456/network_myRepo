@@ -1,12 +1,23 @@
 import java.io.Serializable;
 
 public class SketchingData implements Serializable {
-    public static final int LINE = 1;
-    public static final int CHAT = 2;
-    public static final int DISCONNECT = 3;
+
+
+    public static final int MODE_LOGIN = 1;
+    public static final int MODE_LOGOUT = 2;
+    public static final int MODE_CHAT = 3;
+    public static final int MODE_LINE = 4;
+
     private Line line;
     private int mode;
     private String message; // 채팅 메시지
+    private String userID; // 접속한 사용자 ID
+
+    // 로그인, 로그아웃용 생성자
+    public SketchingData(int mode, String userID) {
+        this.mode = mode;
+        this.userID = userID;
+    }
 
     // 스케치데이터 전송시 생성자
     public SketchingData(int mode, Line line) {
@@ -16,10 +27,14 @@ public class SketchingData implements Serializable {
     }
 
     // 채팅 메시지 전송시 생성자
-    public SketchingData(int mode, String message) {
+    public SketchingData(int mode, String userID, String message) {
         this.mode = mode;
         this.message = message;
         line = null;
+    }
+
+    public String getUserID() {
+        return userID;
     }
 
     public Line getLine() {
