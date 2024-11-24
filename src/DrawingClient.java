@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
+import java.util.Vector;
 
 public class DrawingClient extends JFrame {
     //    private static final String SERVER_ADDRESS = "localhost";
@@ -18,7 +19,7 @@ public class DrawingClient extends JFrame {
     private LeftUserPanel leftUserPanel;
     private RightUserPanel rightUserPanel;
     private DrawingSetting drawingSetting;
-
+    private InputPanel inputPanel;
     private boolean isDrawing = false;      // 그림 그리고 있는지 확인
     private Point lastPoint = null;  // 마지막 좌표
     // 지우개 사용중인지 확인
@@ -45,13 +46,17 @@ public class DrawingClient extends JFrame {
         rightUserPanel = new RightUserPanel();
         chatingListPanel = new ChatingListPanel();
         drawingSetting = new DrawingSetting(this);
-        InputPanel inputPanel = new InputPanel(this);
+        inputPanel = new InputPanel(this);
 
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(drawPanel, BorderLayout.CENTER);
         centerPanel.add(leftUserPanel, BorderLayout.WEST);
-        centerPanel.add(rightUserPanel, BorderLayout.EAST);
+        //centerPanel.add(rightUserPanel, BorderLayout.EAST); 4명까지만 보여주기로 일단 설정.
+        // 이 보더 레이아웃 East 영역을 다른 용도로 활용해보면 어떨까
         centerPanel.add(drawingSetting, BorderLayout.NORTH);
+
+        centerPanel.add(inputPanel, BorderLayout.SOUTH);
+
 
         drawingSetting.getEraser().addActionListener(new ActionListener() {
             @Override
@@ -67,8 +72,9 @@ public class DrawingClient extends JFrame {
             }
         });
 
+
         add(centerPanel);
-        add(inputPanel, BorderLayout.SOUTH);
+        //add(inputPanel, BorderLayout.SOUTH);
         add(chatingListPanel, BorderLayout.EAST);
         setVisible(true);
     }
@@ -143,19 +149,19 @@ public class DrawingClient extends JFrame {
     }
 
 
-    //UserPanel에 사용자 추가하는 메서드
-    private void addUser(String userId) {
-        if (!leftUserPanel.addUser(userId, 0)) {
-            rightUserPanel.addUser(userId, 0);
-        }
-    }
-
-    //UserPanel에 사용자 제거하는 메서드
-    private void removeUser(String userId) {
-        if (!leftUserPanel.removeUser(userId)) {
-            rightUserPanel.removeUser(userId);
-        }
-    }
+//    //UserPanel에 사용자 추가하는 메서드
+//    private void addUser(String userId) {
+//        if (!leftUserPanel.addUser(userId, 0)) {
+//            rightUserPanel.addUser(userId, 0);
+//        }
+//    }
+//
+//    //UserPanel에 사용자 제거하는 메서드
+//    private void removeUser(String userId) {
+//        if (!leftUserPanel.removeUser(userId)) {
+//            rightUserPanel.removeUser(userId);
+//        }
+//    }
 
     private void connectToServer() {
         // Swing은 단일 스레드 환경임. EDT라는 스레드에서 혼자 UI 업데이트를 처리.
@@ -224,6 +230,12 @@ public class DrawingClient extends JFrame {
                             drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2(), line.getColor(), line.getLineWidth());
                             break;
 
+                        case SketchingData.MODE_CLIENT_LIST:
+                            Vector<String> userIDList = data.getuserIDList();
+                            Vector<Integer> userScoreList = data.getuserScoreList();
+                            updateUserPanel(userIDList, userScoreList);
+                            break;
+
                     }
 //                    else if (data.getMode() == SketchingData.MODE_LOGOUT) {
 //                        removeUser(data.getUserID());
@@ -238,6 +250,26 @@ public class DrawingClient extends JFrame {
             }
         }
     }
+
+    private void updateUserPanel(Vector<String> userIDList, Vector<Integer> userScoreList) {
+
+        // 로그아웃한 플레이어를 userPanel에 반영시키기위해 모든 패널 초기화
+        for (int i = 0; i < 4; i++) {
+            leftUserPanel.getUser(i).setUser("", 0);
+            rightUserPanel.getUser(i).setUser("", 0);
+        }
+
+        for (int i = 0; i < userIDList.size(); i++) {
+            if (i < 4) {
+                leftUserPanel.getUser(i).setUser(userIDList.get(i), userScoreList.get(i));
+            } else {
+                rightUserPanel.getUser(i - 4).setUser(userIDList.get(i), userScoreList.get(i));
+            }
+        }
+        leftUserPanel.repaint();
+        rightUserPanel.repaint();
+    }
+
 
     void disconnect() {
         send(new SketchingData(SketchingData.MODE_LOGOUT, userId));

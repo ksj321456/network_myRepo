@@ -173,9 +173,11 @@ public class DrawingServer extends JFrame {
         private final Socket clientSocket;
         private ObjectOutputStream out;
         private String userID; // 현재 서버측 각 클라이언트 소켓들이 연결중인 대응중인 사용자의 아이디
+        private int score; // 현재 이 사용자의 점수
 
         public ClientHandler(Socket clientSocket) {
             this.clientSocket = clientSocket;
+            this.score = 0;
         }
 
         @Override
@@ -190,13 +192,12 @@ public class DrawingServer extends JFrame {
                 ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(clientSocket.getInputStream()));
 
 
-
                 while ((data = (SketchingData) in.readObject()) != null) {
                     //스케치 데이터를 받았을 때
                     //printDisplay("클라이언트로부터 데이터 수신");
                     if (data.getMode() == SketchingData.MODE_LOGIN) { // 읽어온 메시지의 모드값이 로그인 메시지라면
                         userID = data.getUserID(); // uid에 로그인한 클라이언트의 아이디를 저장.
-
+                        sendPlayerList(); // 각 클라이언트에게 현재 접속중인 플레이어 리스트 전송
                         printDisplay("NEW 플레이어: " + userID);
                         printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers());
                         continue;
@@ -215,9 +216,11 @@ public class DrawingServer extends JFrame {
                 }
                 //while문을 빠져나왔다는 것은 클라이언트와의 연결이 끊어졌다는 뜻.
                 clients.remove(this); // 연결이 끊은 클라이언트를 사용자벡터에서 제거. 현재 작업스레드를 벡터에서 제거.
+                sendPlayerList(); // 한 플레이어가 퇴장했으므로, 플레이어 리스트를 갱신하여 모든 클라이언트에게 전송.
                 printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + clients.size() + currentPlayers());
             } catch (IOException e) {
                 clients.remove(this);
+                sendPlayerList(); // 한 플레이어가 퇴장했으므로, 플레이어 리스트를 갱신하여 모든 클라이언트에게 전송.
                 printDisplay(userID + " 연결 끊김. 현재 참가자 수 : " + clients.size());
             } catch (ClassNotFoundException e) {
                 System.err.println("객체 전달 오류> " + e.getMessage());
@@ -232,6 +235,18 @@ public class DrawingServer extends JFrame {
                     System.exit(-1);
                 }
             }
+        }
+
+        private void sendPlayerList() {
+            Vector<String> userIDList = new Vector<>();
+            Vector<Integer> userScoreList = new Vector<>();
+
+            for (ClientHandler client : clients) {
+                userIDList.add(client.userID);
+                userScoreList.add(client.score);
+            }
+            SketchingData data = new SketchingData(SketchingData.MODE_CLIENT_LIST, userIDList, userScoreList);
+            broadcast(data);
         }
 
         private String currentPlayers() {
