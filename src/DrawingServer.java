@@ -122,7 +122,7 @@ public class DrawingServer extends JFrame {
         try {
             serverSocket = new ServerSocket(PORT);// 해당 포트와 연결된 서버소켓 객체 생성.
             inetAddress = InetAddress.getLocalHost();
-            printDisplay("서버가 시작되었습니다: " + inetAddress.getHostAddress());
+            printDisplay("서버가 시작되었습니다: " + inetAddress.getHostAddress() + "\n");
 
             while (acceptThread == Thread.currentThread()) {
                 clientSocket = serverSocket.accept();
@@ -195,7 +195,7 @@ public class DrawingServer extends JFrame {
                         userID = data.getUserID(); // uid에 로그인한 클라이언트의 아이디를 저장.
 
                         printDisplay("NEW 플레이어: " + userID);
-                        printDisplay("현재 접속중인 플레이어 수: " + clients.size());
+                        printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers());
                         continue;
                     } else if (data.getMode() == SketchingData.MODE_LOGOUT) { // 로그아웃 메시지라면
                         break; // 클라이언트측과의 연결을 해제
@@ -211,7 +211,7 @@ public class DrawingServer extends JFrame {
                 }
                 //while문을 빠져나왔다는 것은 클라이언트와의 연결이 끊어졌다는 뜻.
                 clients.remove(this); // 연결이 끊은 클라이언트를 사용자벡터에서 제거. 현재 작업스레드를 벡터에서 제거.
-                printDisplay(userID + "플레이어가 퇴장하였습니다. 현재 참가자 수 : " + clients.size());
+                printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + clients.size() + currentPlayers());
             } catch (IOException e) {
                 clients.remove(this);
                 printDisplay(userID + " 연결 끊김. 현재 참가자 수 : " + clients.size());
@@ -228,6 +228,19 @@ public class DrawingServer extends JFrame {
                     System.exit(-1);
                 }
             }
+        }
+
+        private String currentPlayers() {
+            String players = " <-";
+            if (clients.isEmpty()) {
+                return "  <접속중인 플레이어가 없습니다>";
+            } else {
+                for (ClientHandler client : clients) {
+                    players += client.userID + "-";
+                }
+                players += ">";
+            }
+            return players;
         }
 
         private void broadcast(SketchingData data) {

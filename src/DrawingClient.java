@@ -227,7 +227,8 @@ public class DrawingClient extends JFrame {
     void disconnect() {
         send(new SketchingData(SketchingData.MODE_LOGOUT, userId));
         try {
-            socket.close();
+            socket.close();  //???? 왜 무한출력되지?
+            System.exit(-1); //????
         } catch (IOException e) {
             System.err.println("클라이언트 닫기 오류> " + e.getMessage());
             System.exit(-1);
