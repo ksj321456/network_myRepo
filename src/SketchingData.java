@@ -1,5 +1,4 @@
 import java.io.Serializable;
-import java.util.Vector;
 
 public class SketchingData implements Serializable {
 
@@ -8,8 +7,8 @@ public class SketchingData implements Serializable {
     public static final int MODE_LOGOUT = 2;
     public static final int MODE_CHAT = 3;
     public static final int MODE_LINE = 4;
-    private Vector<String> clientList; // 접속자 리스트
-    
+    public static final int MODE_CLIENT_LIST = 5; // 접속자 리스트
+
     private Line line;
     private int mode;
     private String message; // 채팅 메시지
