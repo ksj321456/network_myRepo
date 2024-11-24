@@ -32,7 +32,7 @@ public class DrawingSetting extends JPanel {
         logoutBtn.addActionListener(e -> {
             drawingClient.disconnect();
         });
-        add(logoutBtn, BorderLayout.EAST);
+        add(logoutBtn, BorderLayout.WEST);
     }
 
     public Color getSelectedColor() {
