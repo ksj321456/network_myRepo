@@ -31,7 +31,7 @@ public class DrawingClient extends JFrame {
         this.serverPort = serverPort;
         buildGUI(); // GUI 구성
         connectToServer(); // 서버에 접속요청
-        sendUserID(); // 서버에 사용자 ID 전송
+
     }
 
     private void buildGUI() {
@@ -153,6 +153,11 @@ public class DrawingClient extends JFrame {
                 out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                 //out.flush();
 
+                // 서버에 사용자 ID 전송//
+                // connectToServer 메서드가 out 객체를 초기화하기 전에 sendUserID 메서드가 호출되면, out 객체가 null이므로 NullPointerException 발생.
+                // 이를 방지하기 위해 sendUserID 메서드를 connectToServer 메서드 내부에서 호출하도록 변경.
+                sendUserID(); // drawingThread & sendCoordsThread 스레드 실행 전에 꼭 먼저 실행되어야 함. 그렇지않으면 채팅 및 그리기 동작 이후에서야 아이디 전송이 이루어지게 됨.
+
                 //순서: 그리기를 실행하는 스레드 실행 후 -> 데이터 수신 스레드 실행. 역순으로하게되면 채팅 전송하기전까지 그림을 그릴 수 없음.
                 DrawingThread drawingThread = new DrawingThread();
                 drawingThread.start();
@@ -164,7 +169,7 @@ public class DrawingClient extends JFrame {
                 //addUser(userId); // 클라이언트가 직접 추가하는게 아닌, 서버에서 현재 접속자들 받아오는 방식으로 변경.
 
             } catch (IOException e) {
-                chatingListPanel.addMessage("입력 스트림이 열리지 않음");
+                chatingListPanel.addMessage("서버에 연결할 수 없습니다: " + e.getMessage());
             }
         }).start();
     }
@@ -253,14 +258,13 @@ public class DrawingClient extends JFrame {
         }
     }
 
-    private void sendMesssage(String message) { // 행단위의 문자열 전송 대신에, send() 메서드를 통해서 하나의 채팅메시지인 ChatMsg 객체를 전송하는 방식으로 변경.
-        String fullMessage = userId + ": " + message;
-        SketchingData chatData = new SketchingData(SketchingData.MODE_CHAT, userId, fullMessage);
+    void sendMessage(String message) { // 행단위의 문자열 전송 대신에, send() 메서드를 통해서 하나의 채팅메시지인 ChatMsg 객체를 전송하는 방식으로 변경.
+
         //chatingListPanel.addMessage("나: " + message); 추후 서버로부터 브로드케스팅받고 -> 그 메시지모드가 채팅이고 + userId가 나랑 같다면 => 채팅리스트에 "나: "로 추가하는 방식으로 변경.
         if (message.isEmpty())
             return;
 
-        send(new SketchingData(SketchingData.MODE_CHAT, userId, fullMessage));
+        send(new SketchingData(SketchingData.MODE_CHAT, userId, message));
         // ChatMsg 객체로 만들어서 전송.
     }
 

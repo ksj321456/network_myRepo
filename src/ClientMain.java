@@ -5,9 +5,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class ClientMain extends JFrame {
-
+    InetAddress inetAddress = null;
     private JTextField t_UserName;
     private JTextField t_IpAddress;
     private JTextField t_PortNumber;
@@ -96,6 +98,13 @@ public class ClientMain extends JFrame {
         t_IpAddress.setBounds(254, 213, 116, 33);
         mainPanel.add(t_IpAddress);
 
+        try {
+            inetAddress = InetAddress.getLocalHost();
+            t_IpAddress.setText(inetAddress.getHostAddress());
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+
         JLabel lblPortNumber = new JLabel("Port Number");
         lblPortNumber.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 16));
         lblPortNumber.setBounds(123, 292, 102, 33);
@@ -153,8 +162,9 @@ public class ClientMain extends JFrame {
     }
 
     private void startGame(String userName, String ipAddress, int portNumber) {
-        DrawingClient drawingClient = new DrawingClient(userName, ipAddress, portNumber);
         dispose(); // 현재 창 닫기
+        DrawingClient drawingClient = new DrawingClient(userName, ipAddress, portNumber);
+
     }
 
 

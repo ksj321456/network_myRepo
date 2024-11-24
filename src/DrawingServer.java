@@ -1,93 +1,238 @@
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Vector;
 
 public class DrawingServer extends JFrame {
     private static final int PORT = 12345;
+    private ServerSocket serverSocket = null;
+    private Thread acceptThread = null;
     private Vector<ClientHandler> clients = new Vector<>();
     private JTextArea t_display;
+    private JButton b_connect, b_disconnect, b_exit;
 
     public DrawingServer() {
+        setTitle("Hansung Sketch Server");
 
-        t_display = new JTextArea();
-        JScrollPane scrollPane = new JScrollPane(t_display);
-        add(scrollPane);
+        /* 프레임의 위치를 화면 중앙으로 설정하는 절차들 */
+        // 현재 사용자의 모니터 화면의 크기를 가져옴
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        // 화면의 가로세로 중앙 계산
+        int centerX = (int) (screenSize.getWidth() - 550) / 2;
+        int centerY = (int) (screenSize.getHeight() - 600) / 2;
+        setBounds(centerX, centerY, 1000, 500);
+        /*-------------------------------------*/
+
+        buildGUI();
         setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 500);
-        setTitle("서버 GUI");
+
     }
 
-    public void startServer() {
-        try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
-            printDisplay("서버 시작");
+    private void buildGUI() {
+        add(createDisplayPanel(), BorderLayout.CENTER);
+        add(createControlPanel(), BorderLayout.SOUTH);
+    }
 
-            while (true) {
-                Socket clientSocket = serverSocket.accept();
+    // 디스플레이 패널
+    private JPanel createDisplayPanel() {
+        JPanel dispalyPanel = new JPanel(new BorderLayout());
+        t_display = new JTextArea();
+        JScrollPane scroll = new JScrollPane(t_display);
+        t_display.setEditable(false);
+        dispalyPanel.add(scroll);
+
+        return dispalyPanel;
+    }
+
+    // control 패널
+    private JPanel createControlPanel() {
+        JPanel controlPanel = new JPanel(new GridLayout(1, 0));
+        b_connect = new JButton("서버 시작");
+        b_disconnect = new JButton("서버 종료");
+        b_disconnect.setEnabled(false);
+        b_exit = new JButton("종료");
+
+        b_connect.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                acceptThread = new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        startServer(); // 작업 스레드에서 서버 시작.
+                    }
+                });
+                acceptThread.start();
+
+                b_connect.setEnabled(false);
+                b_exit.setEnabled(false);
+                b_disconnect.setEnabled(true);
+            }
+        });
+
+        b_disconnect.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                disconnect(); // 접속끊기버튼 클릭시 서버와 연결종료.
+            }
+        });
+
+        b_exit.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0); // 프로그램 정상 종료.
+            }
+        });
+        controlPanel.add(b_connect);
+        controlPanel.add(b_disconnect);
+        controlPanel.add(b_exit);
+
+        b_exit.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent ae) {// 종료버튼이 눌려지면 서버소켓을 닫아준다. 이로써 프로그램 종료.
+                try {
+                    if (serverSocket != null)
+                        serverSocket.close();
+                } catch (IOException e) {
+                    System.err.println("서버닫기 오류> " + e.getMessage());
+                }
+            }
+        });
+
+        controlPanel.add(b_exit, BorderLayout.CENTER);
+
+        return controlPanel;
+    }
+
+
+    public void startServer() {
+        Socket clientSocket = null;
+        InetAddress inetAddress = null;
+        try {
+            serverSocket = new ServerSocket(PORT);// 해당 포트와 연결된 서버소켓 객체 생성.
+            inetAddress = InetAddress.getLocalHost();
+            printDisplay("서버가 시작되었습니다: " + inetAddress.getHostAddress());
+
+            while (acceptThread == Thread.currentThread()) {
+                clientSocket = serverSocket.accept();
+
+                String cAddress = clientSocket.getInetAddress().getHostAddress();
+                printDisplay("클라이언트가 연결되었습니다: " + cAddress);
+
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 clients.add(clientHandler);
                 clientHandler.start();
             }
+        } catch (SocketException e) {
+            printDisplay("서버 소켓 종료");
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (clientSocket != null)
+                    clientSocket.close();
+                if (serverSocket != null)
+                    serverSocket.close();
+
+            } catch (IOException e) {
+                System.err.println("서버닫기 오류> " + e.getMessage());
+                System.exit(-1);
+            }
+        }
+    }
+
+    private void disconnect() {
+
+        try {
+            acceptThread = null;
+            serverSocket.close();
+            b_connect.setEnabled(true);
+            b_exit.setEnabled(true);
+            b_disconnect.setEnabled(false);
+
+        } catch (IOException e) {
+            System.err.println("서버소켓 닫기 오류> " + e.getMessage());
+            System.exit(-1);
         }
     }
 
     private class ClientHandler extends Thread {
-        private final Socket socket;
+        private final Socket clientSocket;
         private ObjectOutputStream out;
+        private String userID; // 현재 서버측 각 클라이언트 소켓들이 연결중인 대응중인 사용자의 아이디
 
-        public ClientHandler(Socket socket) {
-            this.socket = socket;
+        public ClientHandler(Socket clientSocket) {
+            this.clientSocket = clientSocket;
         }
 
         @Override
         public void run() {
+            String message;
             SketchingData data = null;
             try {
                 //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 순서 바뀌면 데드락 발생.
                 //현재 이 소켓이, ObjectInputStream을 생성하기 전에 헤더 정보를 수신하면 ObjectInputStream은 스트림 헤더를 기대하지 않았기 때문에 블록 상태에 빠지기때문.
-                out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                out = new ObjectOutputStream(new BufferedOutputStream(clientSocket.getOutputStream()));
                 //out.flush();
-                ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+                ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(clientSocket.getInputStream()));
 
 
                 while ((data = (SketchingData) in.readObject()) != null) {
                     //스케치 데이터를 받았을 때
                     //printDisplay("클라이언트로부터 데이터 수신");
-                    if (data.getMode() == SketchingData.MODE_LINE) {
+                    if (data.getMode() == SketchingData.MODE_LOGIN) { // 읽어온 메시지의 모드값이 로그인 메시지라면
+                        userID = data.getUserID(); // uid에 로그인한 클라이언트의 아이디를 저장.
+
+                        printDisplay("NEW 플레이어: " + userID);
+                        printDisplay("현재 접속중인 플레이어 수: " + clients.size());
+                        continue;
+                    } else if (data.getMode() == SketchingData.MODE_LOGOUT) { // 로그아웃 메시지라면
+                        break; // 클라이언트측과의 연결을 해제
+                    }                    //채팅 메시지를 받았을 때
+                    else if (data.getMode() == SketchingData.MODE_CHAT) {
+                        printDisplay("[채팅 메시지]" + userID + ": " + data.getMessage());
+                        broadcast(data);
+                    } else if (data.getMode() == SketchingData.MODE_LINE) {
                         Line line = data.getLine();
                         //printDisplay("그리기 좌표: " + line.getX1() + ", " + line.getY1() + ", " + line.getX2() + ", " + line.getY2());
-                        broadcast(data, this);
-                    }
-
-                    //채팅 메시지를 받았을 때
-                    else if (data.getMode() == SketchingData.MODE_CHAT) {
-                        printDisplay("채팅 메시지: " + data.getMessage());
-                        broadcastOthers(data, this);
+                        broadcast(data);
                     }
                 }
-            } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
+                //while문을 빠져나왔다는 것은 클라이언트와의 연결이 끊어졌다는 뜻.
+                clients.remove(this); // 연결이 끊은 클라이언트를 사용자벡터에서 제거. 현재 작업스레드를 벡터에서 제거.
+                printDisplay(userID + "플레이어가 퇴장하였습니다. 현재 참가자 수 : " + clients.size());
+            } catch (IOException e) {
+                clients.remove(this);
+                printDisplay(userID + " 연결 끊김. 현재 참가자 수 : " + clients.size());
+            } catch (ClassNotFoundException e) {
+                System.err.println("객체 전달 오류> " + e.getMessage());
             } finally {
                 try {
-                    // 클라이언트 소켓이 종료될 때 MODE_LOGOUT 메시지 처리
-                    SketchingData logoutData = new SketchingData(SketchingData.MODE_LOGOUT, data.getUserID(), socket.getInetAddress().toString());
-                    broadcastOthers(logoutData, this);
-                    socket.close();
+/*                    // 클라이언트 소켓이 종료될 때 MODE_LOGOUT 메시지 처리
+                    SketchingData logoutData = new SketchingData(SketchingData.MODE_LOGOUT, data.getUserID(), clientSocket.getInetAddress().toString());
+                    broadcastOthers(logoutData, this);*/
+                    clientSocket.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    System.err.println("서버 닫기 오류> " + e.getMessage());
+                    System.exit(-1);
                 }
             }
         }
 
-        private void broadcast(SketchingData data, ClientHandler sender) {
+        private void broadcast(SketchingData data) {
             for (ClientHandler client : clients)
                 client.sendData(data);
-
         }
 
         private void broadcastOthers(SketchingData data, ClientHandler sender) {
@@ -103,10 +248,12 @@ public class DrawingServer extends JFrame {
                 out.writeObject(data);
                 out.flush();
             } catch (IOException e) {
+                //System.err.println("클라이언트 일반 전송 오류> " + e.getMessage());
                 throw new RuntimeException(e);
             }
         }
     }
+
 
     private void printDisplay(String msg) {
         t_display.append(msg + "\n");
@@ -115,6 +262,6 @@ public class DrawingServer extends JFrame {
 
     public static void main(String[] args) {
         DrawingServer drawingServer = new DrawingServer();
-        drawingServer.startServer();
+        //drawingServer.startServer();
     }
 }

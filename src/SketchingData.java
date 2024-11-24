@@ -29,8 +29,9 @@ public class SketchingData implements Serializable {
     // 채팅 메시지 전송시 생성자
     public SketchingData(int mode, String userID, String message) {
         this.mode = mode;
+        this.userID = userID;
         this.message = message;
-        line = null;
+
     }
 
     public String getUserID() {
