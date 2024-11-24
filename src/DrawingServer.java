@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -120,6 +121,7 @@ public class DrawingServer extends JFrame {
         Socket clientSocket = null;
         InetAddress inetAddress = null;
         try {
+
             serverSocket = new ServerSocket(PORT);// 해당 포트와 연결된 서버소켓 객체 생성.
             inetAddress = InetAddress.getLocalHost();
             printDisplay("서버가 시작되었습니다: " + inetAddress.getHostAddress() + "\n");
@@ -188,6 +190,7 @@ public class DrawingServer extends JFrame {
                 ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(clientSocket.getInputStream()));
 
 
+
                 while ((data = (SketchingData) in.readObject()) != null) {
                     //스케치 데이터를 받았을 때
                     //printDisplay("클라이언트로부터 데이터 수신");
@@ -208,6 +211,7 @@ public class DrawingServer extends JFrame {
                         //printDisplay("그리기 좌표: " + line.getX1() + ", " + line.getY1() + ", " + line.getX2() + ", " + line.getY2());
                         broadcast(data);
                     }
+
                 }
                 //while문을 빠져나왔다는 것은 클라이언트와의 연결이 끊어졌다는 뜻.
                 clients.remove(this); // 연결이 끊은 클라이언트를 사용자벡터에서 제거. 현재 작업스레드를 벡터에서 제거.

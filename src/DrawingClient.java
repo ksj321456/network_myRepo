@@ -219,6 +219,7 @@ public class DrawingClient extends JFrame {
                 } catch (ClassNotFoundException e) {
                     chatingListPanel.addMessage("잘못된 객체가 전달되었습니다.");
                     throw new RuntimeException(e);
+
                 }
             }
         }
