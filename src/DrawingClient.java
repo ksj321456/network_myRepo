@@ -213,9 +213,9 @@ public class DrawingClient extends JFrame {
                             break;
 
                         case SketchingData.MODE_CLIENT_LIST:
-                            Vector<String> userIDs = data.getuserIDList();
-                            Vector<Integer> scores = data.getuserScoreList();
-                            updateUserPanel(userIDs, scores);
+                            Vector<String> userIDList = data.getuserIDList();
+                            Vector<Integer> userScoreList = data.getuserScoreList();
+                            updateUserPanel(userIDList, userScoreList);
                             break;
 
                     }
@@ -234,6 +234,13 @@ public class DrawingClient extends JFrame {
     }
 
     private void updateUserPanel(Vector<String> userIDList, Vector<Integer> userScoreList) {
+
+        // 로그아웃한 플레이어를 userPanel에 반영시키기위해 모든 패널 초기화
+        for (int i = 0; i < 4; i++) {
+            leftUserPanel.getUser(i).setUser("", 0);
+            rightUserPanel.getUser(i).setUser("", 0);
+        }
+
         for (int i = 0; i < userIDList.size(); i++) {
             if (i < 4) {
                 leftUserPanel.getUser(i).setUser(userIDList.get(i), userScoreList.get(i));
