@@ -1,8 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
 
@@ -23,6 +21,8 @@ public class DrawingClient extends JFrame {
 
     private boolean isDrawing = false;      // 그림 그리고 있는지 확인
     private Point lastPoint = null;  // 마지막 좌표
+    // 지우개 사용중인지 확인
+    private boolean isEraserOn = false;
 
 
     public DrawingClient(String userId, String serverAddress, int serverPort) {
@@ -53,6 +53,20 @@ public class DrawingClient extends JFrame {
         centerPanel.add(rightUserPanel, BorderLayout.EAST);
         centerPanel.add(drawingSetting, BorderLayout.NORTH);
 
+        drawingSetting.getEraser().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (isEraserOn) {
+                    isEraserOn = false;
+                    drawingSetting.getIsEraser().setText("지우개 사용중 X");
+                }
+                else {
+                    isEraserOn = true;
+                    drawingSetting.getIsEraser().setText("지우개 사용중");
+                }
+            }
+        });
+
         add(centerPanel);
         add(inputPanel, BorderLayout.SOUTH);
         add(chatingListPanel, BorderLayout.EAST);
@@ -73,8 +87,8 @@ public class DrawingClient extends JFrame {
         @Override
         public void mouseDragged(MouseEvent e) {
             if (isDrawing && lastPoint != null) { // 그리기 상태일 때만 좌표를 전송
-                Color selectedColor = drawingSetting.getSelectedColor();
-                float selectedWidth = drawingSetting.getSelectedLineWidth();
+                Color selectedColor = isEraserOn ? Color.WHITE : drawingSetting.getSelectedColor();
+                float selectedWidth = isEraserOn ? 20 : drawingSetting.getSelectedLineWidth();
 
                 // Line 객체 생성 및 색깔, 굵기 설정
                 Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY(), selectedColor, selectedWidth);
