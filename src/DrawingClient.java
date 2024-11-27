@@ -51,7 +51,7 @@ public class DrawingClient extends JFrame {
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(drawPanel, BorderLayout.CENTER);
         centerPanel.add(leftUserPanel, BorderLayout.WEST);
-        //centerPanel.add(rightUserPanel, BorderLayout.EAST); 4명까지만 보여주기로 일단 설정.
+        centerPanel.add(rightUserPanel, BorderLayout.EAST);
         // 이 보더 레이아웃 East 영역을 다른 용도로 활용해보면 어떨까
         centerPanel.add(drawingSetting, BorderLayout.NORTH);
 
