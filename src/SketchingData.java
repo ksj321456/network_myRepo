@@ -20,6 +20,7 @@ public class SketchingData implements Serializable {
 */
     public static final int CREATE_ROOM = 11;   // 방을 생성하는 모드
     public static final int SHOW_ROOM_LIST = 12;        // 새로운 클라이언트에게 방의 리스트들을 보여주는 모드
+    public static final int ENTER_ROOM = 13;        // 방에 입장하는 모드
 
     private Line line;
     private int mode;
@@ -41,18 +42,19 @@ public class SketchingData implements Serializable {
     }
 
     // 스케치데이터 전송시 생성자
-    public SketchingData(int mode, Line line) {
+    public SketchingData(int mode, Line line, String roomName) {
         this.mode = mode;
         this.line = line;
+        this.roomName = roomName;
         message = null;
     }
 
     // 채팅 메시지 전송시 생성자
-    public SketchingData(int mode, String userID, String message) {
+    public SketchingData(int mode, String userID, String message, String roomName) {
         this.mode = mode;
         this.userID = userID;
         this.message = message;
-
+        this.roomName = roomName;
     }
 
     // 플레이어&점수리스트 전송용 생성자
@@ -62,7 +64,7 @@ public class SketchingData implements Serializable {
         this.userScoreList = userScoreList;
     }
 
-    // 방 생성 관련 생성자
+    // 방 생성 관련 생성자, 방 입장 관련 생성자
     public SketchingData(int mode, String roomName, String ownerName, String IPAddress, int portNumber) {
         this.mode = mode;
         this.roomName = roomName;
@@ -71,10 +73,12 @@ public class SketchingData implements Serializable {
         this.portNumber = portNumber;
     }
 
+    // 현재 존재하는 방에 리스트들을 갖고올 때의 생성자
     public SketchingData(int mode, Vector<String> roomList) {
         this.mode = mode;
         this.roomList = roomList;
     }
+
 
     public String getUserID() {
         return userID;

@@ -8,6 +8,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 public class DrawingServer extends JFrame {
@@ -18,9 +20,9 @@ public class DrawingServer extends JFrame {
     private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
 
-    private Vector<DrawingClient> drawingClients = new Vector<>();
     private Vector<String> roomNamesList = new Vector<>();
     private Vector<String> ownerNamesList = new Vector<>();
+    private Map<String, DrawingClient> rooms = new HashMap<>();
 
     public DrawingServer() {
         setTitle("Hansung Sketch Server");
@@ -157,22 +159,6 @@ public class DrawingServer extends JFrame {
             }
         }
     }
-
-    private void disconnect() {
-
-        try {
-            acceptThread = null;
-            serverSocket.close();
-            b_connect.setEnabled(true);
-            b_exit.setEnabled(true);
-            b_disconnect.setEnabled(false);
-
-        } catch (IOException e) {
-            System.err.println("서버소켓 닫기 오류> " + e.getMessage());
-            System.exit(-1);
-        }
-    }
-
     private class ClientHandler extends Thread {
         private final Socket clientSocket;
         private ObjectOutputStream out;
@@ -205,14 +191,15 @@ public class DrawingServer extends JFrame {
                         printDisplay("NEW 플레이어: " + userID);
                         printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers());
 
-                        // 로그인시 방이 하나라도 있다면 새로운 클라이언트에게 현재 방의 리스트들을 보여준다
-                        if (!drawingClients.isEmpty()) {
-                            for(String roomName : roomNamesList) {
-                                SketchingData sketchingData = new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNamesList);
-                                System.out.println("방의 이름: " + roomName);
-                                out.writeObject(sketchingData);
-                                out.flush();
+                        // 로그인시 방이 하나라도 있다면 새로운 클라이언트는 존재하는 방들을 확인해야 한다.
+                        if (!rooms.isEmpty()) {
+                            // 현재 있는 방의 이름들을 roomNames Vector에 저장
+                            Vector<String> roomNames = new Vector<>();
+                            for (String roomName : rooms.keySet()) {
+                                roomNames.add(roomName);
                             }
+                            // 로그인한 클라이언트에게만 현재 방 리스트들을 전송
+                            sendOnlyOne(new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNames), data.getUserID());
                         }
 
                         continue;
@@ -228,16 +215,24 @@ public class DrawingServer extends JFrame {
                         broadcast(data);
                     } else if (data.getMode() == SketchingData.CREATE_ROOM) {
                         // 방 생성 요청을 받았을 때
-                        drawingClients.add(new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
-                        roomNamesList.add(data.getRoomName());
-                        System.out.println("방의 이름: " + data.getRoomName());
-                        ownerNamesList.add(data.getOwnerName());
-                        System.out.println("방장 이름: " + data.getOwnerName());
-                        printDisplay("방이 생성되었습니다.");
-                        // 방이 생성되었다는 사실을 모든 클라이언트에 응답
-                        broadcast(data);
-                    }
 
+                        // 생성하고자하는 방의 이름이 중복된게 없을 때
+                        if (!rooms.containsKey(data.getRoomName())) {
+                            DrawingClient drawingClient = new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            rooms.put(data.getRoomName(), drawingClient);
+                            printDisplay("방 생성 (방 이름: " + data.getRoomName() + ") 방 갯수: " + rooms.size());
+                            broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
+                        }
+                    }
+                    // 방에 입장할 때
+                    else if (data.getMode() == SketchingData.ENTER_ROOM) {
+                        // 전달받은 roomName 속성을 통해 방을 찾고 해당 DrawingClient 불러오기
+                        for (String roomName : rooms.keySet()) {
+                            if (roomName.equals(data.getRoomName())) {
+                                new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            }
+                        }
+                    }
                 }
                 //while문을 빠져나왔다는 것은 클라이언트와의 연결이 끊어졌다는 뜻.
                 clients.remove(this); // 연결이 끊은 클라이언트를 사용자벡터에서 제거. 현재 작업스레드를 벡터에서 제거.
@@ -295,6 +290,17 @@ public class DrawingServer extends JFrame {
             }
         }
 
+        // 하나의 클라이언트에게만 데이터 전송
+        private void sendOnlyOne(SketchingData data, String userID) {
+            synchronized (clients) {
+                for(ClientHandler clientHandler : clients) {
+                    if (clientHandler.userID.equals(userID)) {
+                        sendData(data);
+                    }
+                }
+            }
+        }
+
         private void broadcastOthers(SketchingData data, ClientHandler sender) {
             for (ClientHandler client : clients) {
                 if (client != sender) {  // 전송자를 제외하고 브로드캐스팅
@@ -313,6 +319,22 @@ public class DrawingServer extends JFrame {
             }
         }
     }
+
+    private void disconnect() {
+
+        try {
+            acceptThread = null;
+            serverSocket.close();
+            b_connect.setEnabled(true);
+            b_exit.setEnabled(true);
+            b_disconnect.setEnabled(false);
+
+        } catch (IOException e) {
+            System.err.println("서버소켓 닫기 오류> " + e.getMessage());
+            System.exit(-1);
+        }
+    }
+
 
 
     private void printDisplay(String msg) {

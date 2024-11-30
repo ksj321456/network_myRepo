@@ -104,7 +104,7 @@ public class DrawingClient extends JFrame {
                 Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY(), selectedColor, selectedWidth);
 
                 // SketchingData 객체 생성
-                SketchingData sketchingData = new SketchingData(SketchingData.MODE_LINE, line);
+                SketchingData sketchingData = new SketchingData(SketchingData.MODE_LINE, line, roomName);
 
                 // 서버에 Line 객체 전송
                 try {
@@ -220,26 +220,29 @@ public class DrawingClient extends JFrame {
                         return;
                     }
 
-                    switch (data.getMode()) { // 수신된 메시지의 모드값에 따라 다른 처리.
-                        case SketchingData.MODE_CHAT: // 채팅모드라면, 서버로부터 전달받은 id 와 문자열 메시지를 화면에 출력.
-                            if (data.getUserID().equals(userId)) {
-                                chatingListPanel.addMessage("나: " + data.getMessage());
-                            } else {
-                                chatingListPanel.addMessage(data.getUserID() + ": " + data.getMessage());
-                            }
-                            break;
+                    // 서버로부터 받는 데이터의 방 이름이 현재 방 이름과 같은 경우만
+                    if (roomName.equals(data.getRoomName())) {
+                        switch (data.getMode()) { // 수신된 메시지의 모드값에 따라 다른 처리.
+                            case SketchingData.MODE_CHAT: // 채팅모드라면, 서버로부터 전달받은 id 와 문자열 메시지를 화면에 출력.
+                                if (data.getUserID().equals(userId)) {
+                                    chatingListPanel.addMessage("나: " + data.getMessage());
+                                } else {
+                                    chatingListPanel.addMessage(data.getUserID() + ": " + data.getMessage());
+                                }
+                                break;
 
-                        case SketchingData.MODE_LINE:  // 그리기 모드를 받았을 때
-                            Line line = data.getLine();
-                            drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2(), line.getColor(), line.getLineWidth());
-                            break;
+                            case SketchingData.MODE_LINE:  // 그리기 모드를 받았을 때
+                                Line line = data.getLine();
+                                drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2(), line.getColor(), line.getLineWidth());
+                                break;
 
-                        case SketchingData.MODE_CLIENT_LIST:
-                            Vector<String> userIDList = data.getuserIDList();
-                            Vector<Integer> userScoreList = data.getuserScoreList();
-                            updateUserPanel(userIDList, userScoreList);
-                            break;
+                            case SketchingData.MODE_CLIENT_LIST:
+                                Vector<String> userIDList = data.getuserIDList();
+                                Vector<Integer> userScoreList = data.getuserScoreList();
+                                updateUserPanel(userIDList, userScoreList);
+                                break;
 
+                        }
                     }
 //                    else if (data.getMode() == SketchingData.MODE_LOGOUT) {
 //                        removeUser(data.getUserID());
@@ -316,7 +319,7 @@ public class DrawingClient extends JFrame {
         if (message.isEmpty())
             return;
 
-        send(new SketchingData(SketchingData.MODE_CHAT, userId, message));
+        send(new SketchingData(SketchingData.MODE_CHAT, userId, message, roomName));
         // ChatMsg 객체로 만들어서 전송.
     }
 
