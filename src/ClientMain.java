@@ -163,7 +163,7 @@ public class ClientMain extends JFrame {
 
     private void startGame(String userName, String ipAddress, int portNumber) {
         dispose(); // 현재 창 닫기
-        DrawingClient drawingClient = new DrawingClient(userName, ipAddress, portNumber);
+        LobbyClient lobbyClient = new LobbyClient(userName, ipAddress, portNumber);
 
     }
 

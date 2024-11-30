@@ -11,6 +11,7 @@ public class DrawingClient extends JFrame {
     private String serverAddress = "localhost";
     private int serverPort = 12345;
     private String userId; // 사용자 ID
+    private String roomName;    // 방 이름
 
     private Socket socket;
     private ObjectOutputStream out;
@@ -25,14 +26,17 @@ public class DrawingClient extends JFrame {
     // 지우개 사용중인지 확인
     private boolean isEraserOn = false;
 
+    // 방에 들어와 있는 클라이언트들
+    private Vector<String> clients = new Vector<>();
 
-    public DrawingClient(String userId, String serverAddress, int serverPort) {
+
+    public DrawingClient(String roomName, String userId, String serverAddress, int serverPort) {
+        this.roomName = roomName;
         this.userId = userId;
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
         buildGUI(); // GUI 구성
         connectToServer(); // 서버에 접속요청
-
     }
 
     private void buildGUI() {

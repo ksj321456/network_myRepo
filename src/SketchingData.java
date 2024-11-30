@@ -1,4 +1,6 @@
 import java.io.Serializable;
+import java.net.Socket;
+import java.util.List;
 import java.util.Vector;
 
 public class SketchingData implements Serializable {
@@ -16,6 +18,8 @@ public class SketchingData implements Serializable {
     public static final int ROUND_START = 9;   // 각 게임 라운드가 시작될 때
     public static final int GAME_OVER = 10; // 정해진 모든 라운드가 종료되어(or 한 플레이어가 특정 maximum 점수에 도달하면) 게임이 종료되었음을 알리는 모드
 */
+    public static final int CREATE_ROOM = 11;   // 방을 생성하는 모드
+    public static final int SHOW_ROOM_LIST = 12;        // 새로운 클라이언트에게 방의 리스트들을 보여주는 모드
 
     private Line line;
     private int mode;
@@ -23,6 +27,12 @@ public class SketchingData implements Serializable {
     private String userID; // 접속한 사용자 ID
     private Vector<String> userIDList; // 접속한 사용자 ID 리스트
     private Vector<Integer> userScoreList; // 접속한 사용자들의 점수 리스트
+    private String roomName;
+    private String ownerName;
+    private String IPAddress;
+    private int portNumber;
+    private Vector<String> roomList;
+    private Vector<String> ownerList;
 
     // 로그인, 로그아웃용 생성자
     public SketchingData(int mode, String userID) {
@@ -50,6 +60,20 @@ public class SketchingData implements Serializable {
         this.mode = mode;
         this.userIDList = userIDList;
         this.userScoreList = userScoreList;
+    }
+
+    // 방 생성 관련 생성자
+    public SketchingData(int mode, String roomName, String ownerName, String IPAddress, int portNumber) {
+        this.mode = mode;
+        this.roomName = roomName;
+        this.ownerName = ownerName;
+        this.IPAddress = IPAddress;
+        this.portNumber = portNumber;
+    }
+
+    public SketchingData(int mode, Vector<String> roomList) {
+        this.mode = mode;
+        this.roomList = roomList;
     }
 
     public String getUserID() {
@@ -86,5 +110,29 @@ public class SketchingData implements Serializable {
 
     public Vector<Integer> getuserScoreList() {
         return userScoreList;
+    }
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public String getIPAddress() {
+        return IPAddress;
+    }
+
+    public int getPortNumber() {
+        return portNumber;
+    }
+
+    public Vector<String> getRoomList() {
+        return roomList;
+    }
+
+    public Vector<String> getOwnerList() {
+        return ownerList;
     }
 }

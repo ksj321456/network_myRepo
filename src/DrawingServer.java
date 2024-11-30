@@ -18,6 +18,10 @@ public class DrawingServer extends JFrame {
     private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
 
+    private Vector<DrawingClient> drawingClients = new Vector<>();
+    private Vector<String> roomNamesList = new Vector<>();
+    private Vector<String> ownerNamesList = new Vector<>();
+
     public DrawingServer() {
         setTitle("Hansung Sketch Server");
 
@@ -200,6 +204,17 @@ public class DrawingServer extends JFrame {
                         sendPlayerList(); // 각 클라이언트에게 현재 접속중인 플레이어 리스트 전송
                         printDisplay("NEW 플레이어: " + userID);
                         printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers());
+
+                        // 로그인시 방이 하나라도 있다면 새로운 클라이언트에게 현재 방의 리스트들을 보여준다
+                        if (!drawingClients.isEmpty()) {
+                            for(String roomName : roomNamesList) {
+                                SketchingData sketchingData = new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNamesList);
+                                System.out.println("방의 이름: " + roomName);
+                                out.writeObject(sketchingData);
+                                out.flush();
+                            }
+                        }
+
                         continue;
                     } else if (data.getMode() == SketchingData.MODE_LOGOUT) { // 로그아웃 메시지라면
                         break; // 클라이언트측과의 연결을 해제
@@ -210,6 +225,16 @@ public class DrawingServer extends JFrame {
                     } else if (data.getMode() == SketchingData.MODE_LINE) {
                         Line line = data.getLine();
                         //printDisplay("그리기 좌표: " + line.getX1() + ", " + line.getY1() + ", " + line.getX2() + ", " + line.getY2());
+                        broadcast(data);
+                    } else if (data.getMode() == SketchingData.CREATE_ROOM) {
+                        // 방 생성 요청을 받았을 때
+                        drawingClients.add(new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
+                        roomNamesList.add(data.getRoomName());
+                        System.out.println("방의 이름: " + data.getRoomName());
+                        ownerNamesList.add(data.getOwnerName());
+                        System.out.println("방장 이름: " + data.getOwnerName());
+                        printDisplay("방이 생성되었습니다.");
+                        // 방이 생성되었다는 사실을 모든 클라이언트에 응답
                         broadcast(data);
                     }
 
@@ -263,8 +288,11 @@ public class DrawingServer extends JFrame {
         }
 
         private void broadcast(SketchingData data) {
-            for (ClientHandler client : clients)
-                client.sendData(data);
+            synchronized(clients) {
+                for (ClientHandler client : clients) {
+                    client.sendData(data);
+                }
+            }
         }
 
         private void broadcastOthers(SketchingData data, ClientHandler sender) {
