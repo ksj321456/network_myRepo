@@ -63,6 +63,7 @@ public class LobbyClient extends JFrame {
                 try {
                     SketchingData data = (SketchingData) in.readObject();
                     if (data.getMode() == SketchingData.CREATE_ROOM) {
+                        // 서버에서의 broadcast를 하나의 클라이언트에서만 받을 수 있도록 조건문 추가
                         if (userName.equals(data.getOwnerName())) {
                             // 서버로부터 방 생성 정보 수신
                             String roomName = data.getRoomName();
