@@ -22,7 +22,7 @@ public class DrawingServer extends JFrame {
 
     private Vector<String> roomNamesList = new Vector<>();
     private Vector<String> ownerNamesList = new Vector<>();
-    private Map<String, DrawingClient> rooms = new HashMap<>();
+    private Map<String, Boolean> rooms = new HashMap<>();
 
     public DrawingServer() {
         setTitle("Hansung Sketch Server");
@@ -198,8 +198,8 @@ public class DrawingServer extends JFrame {
                             for (String roomName : rooms.keySet()) {
                                 roomNames.add(roomName);
                             }
-                            // 로그인한 클라이언트에게만 현재 방 리스트들을 전송
-                            sendOnlyOne(new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNames), data.getUserID());
+                            // 존재하는 방들의 이름 전송
+                            broadcast(new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNames, data.getUserID()));
                         }
 
                         continue;
@@ -218,8 +218,7 @@ public class DrawingServer extends JFrame {
 
                         // 생성하고자하는 방의 이름이 중복된게 없을 때
                         if (!rooms.containsKey(data.getRoomName())) {
-                            DrawingClient drawingClient = new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
-                            rooms.put(data.getRoomName(), drawingClient);
+                            rooms.put(data.getRoomName(), true);
                             printDisplay("방 생성 (방 이름: " + data.getRoomName() + ") 방 갯수: " + rooms.size());
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
                         }
@@ -229,7 +228,7 @@ public class DrawingServer extends JFrame {
                         // 전달받은 roomName 속성을 통해 방을 찾고 해당 DrawingClient 불러오기
                         for (String roomName : rooms.keySet()) {
                             if (roomName.equals(data.getRoomName())) {
-                                new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                                broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
                             }
                         }
                     }

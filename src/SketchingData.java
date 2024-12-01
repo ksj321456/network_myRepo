@@ -74,9 +74,10 @@ public class SketchingData implements Serializable {
     }
 
     // 현재 존재하는 방에 리스트들을 갖고올 때의 생성자
-    public SketchingData(int mode, Vector<String> roomList) {
+    public SketchingData(int mode, Vector<String> roomList, String userID) {
         this.mode = mode;
         this.roomList = roomList;
+        this.userID = userID;
     }
 
 

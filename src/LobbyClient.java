@@ -63,21 +63,33 @@ public class LobbyClient extends JFrame {
                 try {
                     SketchingData data = (SketchingData) in.readObject();
                     if (data.getMode() == SketchingData.CREATE_ROOM) {
-                        // 서버로부터 방 생성 정보 수신
-                        String roomName = data.getRoomName();
+                        if (userName.equals(data.getOwnerName())) {
+                            // 서버로부터 방 생성 정보 수신
+                            String roomName = data.getRoomName();
 
-                        // 방 목록에 새로운 방 추가
-                        roomListModel.addElement(roomName);
-                        System.out.println("새로운 방 추가됨: " + roomName);
-                    }
-                    // 방의 리스트 업데이트
-                    else if (data.getMode() == SketchingData.SHOW_ROOM_LIST) {
-                        Vector<String> roomList = data.getRoomList();
-                        roomListModel.clear(); // 기존 목록을 초기화
-                        for (String room : roomList) {
-                            roomListModel.addElement(room); // 방 목록 추가
+                            // 방 목록에 새로운 방 추가
+                            roomListModel.addElement(roomName);
+                            dispose();
+                            new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            System.out.println("새로운 방 추가됨: " + roomName);
                         }
-                        System.out.println("방 목록 업데이트 완료");
+                    }
+                    else if (data.getMode() == SketchingData.SHOW_ROOM_LIST) {
+                        if (userName.equals(data.getUserID())) {
+                            Vector<String> roomList = data.getRoomList();
+                            roomListModel.clear(); // 기존 목록을 초기화
+                            for (String room : roomList) {
+                                roomListModel.addElement(room); // 방 목록 추가
+                            }
+                            System.out.println("방 목록 업데이트 완료");
+                        }
+                    }
+                    // 방에 입장
+                    else if (data.getMode() == SketchingData.ENTER_ROOM) {
+                        if (userName.equals(data.getOwnerName())) {
+                            dispose();
+                            new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                        }
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
