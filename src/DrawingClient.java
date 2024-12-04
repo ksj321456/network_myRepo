@@ -26,10 +26,6 @@ public class DrawingClient extends JFrame {
     // 지우개 사용중인지 확인
     private boolean isEraserOn = false;
 
-    // 방에 들어와 있는 클라이언트들
-    private Vector<String> clients = new Vector<>();
-
-
     public DrawingClient(String roomName, String userId, String serverAddress, int serverPort) {
         this.roomName = roomName;
         this.userId = userId;
@@ -180,14 +176,14 @@ public class DrawingClient extends JFrame {
                 // 서버에 사용자 ID 전송//
                 // connectToServer 메서드가 out 객체를 초기화하기 전에 sendUserID 메서드가 호출되면, out 객체가 null이므로 NullPointerException 발생.
                 // 이를 방지하기 위해 sendUserID 메서드를 connectToServer 메서드 내부에서 호출하도록 변경.
-                sendUserID(); // drawingThread & sendCoordsThread 스레드 실행 전에 꼭 먼저 실행되어야 함. 그렇지않으면 채팅 및 그리기 동작 이후에서야 아이디 전송이 이루어지게 됨.
+//                sendUserID(); // drawingThread & sendCoordsThread 스레드 실행 전에 꼭 먼저 실행되어야 함. 그렇지않으면 채팅 및 그리기 동작 이후에서야 아이디 전송이 이루어지게 됨.
 
                 //순서: 그리기를 실행하는 스레드 실행 후 -> 데이터 수신 스레드 실행. 역순으로하게되면 채팅 전송하기전까지 그림을 그릴 수 없음.
                 DrawingThread drawingThread = new DrawingThread();
                 drawingThread.start();
 
-                Thread sendCoordsThread = new ReceiveThread(socket);
-                sendCoordsThread.start(); //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 미준수시 데드락 발생 가능성 있음.
+                Thread receiveThread = new ReceiveThread(socket);
+                receiveThread.start(); //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 미준수시 데드락 발생 가능성 있음.
 
                 // 서버에 접속한 사용자를 UserPanel에 추가
                 //addUser(userId); // 클라이언트가 직접 추가하는게 아닌, 서버에서 현재 접속자들 받아오는 방식으로 변경.
@@ -229,6 +225,7 @@ public class DrawingClient extends JFrame {
                                 } else {
                                     chatingListPanel.addMessage(data.getUserID() + ": " + data.getMessage());
                                 }
+                                System.out.println(data.getRoomName() + "에서 채팅");
                                 break;
 
                             case SketchingData.MODE_LINE:  // 그리기 모드를 받았을 때
@@ -239,6 +236,13 @@ public class DrawingClient extends JFrame {
                             case SketchingData.MODE_CLIENT_LIST:
                                 Vector<String> userIDList = data.getuserIDList();
                                 Vector<Integer> userScoreList = data.getuserScoreList();
+                                System.out.println("userIDList size = " + userIDList.size());
+                                for (String userID : userIDList) {
+                                    System.out.println("userID: " + userID);
+                                }
+                                for (int score : userScoreList) {
+                                    System.out.println("score: " + score);
+                                }
                                 updateUserPanel(userIDList, userScoreList);
                                 break;
 
@@ -321,10 +325,6 @@ public class DrawingClient extends JFrame {
 
         send(new SketchingData(SketchingData.MODE_CHAT, userId, message, roomName));
         // ChatMsg 객체로 만들어서 전송.
-    }
-
-    private void sendUserID() {
-        send(new SketchingData(SketchingData.MODE_LOGIN, userId)); // 서버에게 로그인 모드&사용자 아이디값을 전달. 서버가 이 아이디값을 통해 클라이언트를 식별.
     }
 
 //

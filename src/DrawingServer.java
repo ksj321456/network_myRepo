@@ -22,7 +22,7 @@ public class DrawingServer extends JFrame {
 
     private Vector<String> roomNamesList = new Vector<>();
     private Vector<String> ownerNamesList = new Vector<>();
-    private Map<String, Boolean> rooms = new HashMap<>();
+    private Map<String, Map<String, Integer>> rooms = new HashMap<>();
 
     public DrawingServer() {
         setTitle("Hansung Sketch Server");
@@ -187,9 +187,10 @@ public class DrawingServer extends JFrame {
                     //printDisplay("클라이언트로부터 데이터 수신");
                     if (data.getMode() == SketchingData.MODE_LOGIN) { // 읽어온 메시지의 모드값이 로그인 메시지라면
                         userID = data.getUserID(); // uid에 로그인한 클라이언트의 아이디를 저장.
-                        sendPlayerList(); // 각 클라이언트에게 현재 접속중인 플레이어 리스트 전송
+//                        sendPlayerList(); // 각 클라이언트에게 현재 접속중인 플레이어 리스트 전송
                         printDisplay("NEW 플레이어: " + userID);
                         printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers());
+                        broadcast(new SketchingData(SketchingData.MODE_LOGIN, userID));
 
                         // 로그인시 방이 하나라도 있다면 새로운 클라이언트는 존재하는 방들을 확인해야 한다.
                         if (!rooms.isEmpty()) {
@@ -218,17 +219,26 @@ public class DrawingServer extends JFrame {
 
                         // 생성하고자하는 방의 이름이 중복된게 없을 때
                         if (!rooms.containsKey(data.getRoomName())) {
-                            rooms.put(data.getRoomName(), true);
+                            Map<String, Integer> map = new HashMap<>();
+                            map.put(data.getOwnerName(), 0);
+                            // key => 방 이름, value => key: userId, value: score
+                            rooms.put(data.getRoomName(), map);
                             printDisplay("방 생성 (방 이름: " + data.getRoomName() + ") 방 갯수: " + rooms.size());
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
+                            sendPlayerList();
                         }
                     }
                     // 방에 입장할 때
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
                         // 전달받은 roomName 속성을 통해 방을 찾고 해당 DrawingClient 불러오기
+                        // 입장하고자 하는 방의 이름을 받아 value인 Map 업데이트 한 후 put
+
+                        // 방의 이름을 받아서 Map 객체를 꺼내와 put으로 업데이트
+                        rooms.get(data.getRoomName()).put(data.getOwnerName(), 0);
                         for (String roomName : rooms.keySet()) {
                             if (roomName.equals(data.getRoomName())) {
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
+                                sendPlayerList();
                             }
                         }
                     }
@@ -259,13 +269,20 @@ public class DrawingServer extends JFrame {
         private void sendPlayerList() {
             Vector<String> userIDList = new Vector<>();
             Vector<Integer> userScoreList = new Vector<>();
+            for (String roomName : rooms.keySet()) {
+                System.out.println(roomName + "으로 ");
+                // roomName으로 value인 Map의 key 값을 받아 userIDList에 저장
 
-            for (ClientHandler client : clients) {
-                userIDList.add(client.userID);
-                userScoreList.add(client.score);
+                Map<String, Integer> map = rooms.get(roomName);
+                for (String userID : map.keySet()) {
+                    userIDList.add(userID);
+                    userScoreList.add(map.get(userID));
+                    System.out.println("userID: " + userID + ", Score: " + map.get(userID) + " 전송");
+                }
+                SketchingData data = new SketchingData(SketchingData.MODE_CLIENT_LIST, roomName, userIDList, userScoreList);
+                System.out.println("클라이언트로 데이터 전송, 방 이름: " + roomName);
+                broadcast(data);
             }
-            SketchingData data = new SketchingData(SketchingData.MODE_CLIENT_LIST, userIDList, userScoreList);
-            broadcast(data);
         }
 
         private String currentPlayers() {

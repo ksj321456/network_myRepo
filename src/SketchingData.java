@@ -58,8 +58,9 @@ public class SketchingData implements Serializable {
     }
 
     // 플레이어&점수리스트 전송용 생성자
-    public SketchingData(int mode, Vector<String> userIDList, Vector<Integer> userScoreList) {
+    public SketchingData(int mode, String roomName, Vector<String> userIDList, Vector<Integer> userScoreList) {
         this.mode = mode;
+        this.roomName = roomName;
         this.userIDList = userIDList;
         this.userScoreList = userScoreList;
     }
