@@ -25,14 +25,16 @@ public class DrawingClient extends JFrame {
     private Point lastPoint = null;  // 마지막 좌표
     // 지우개 사용중인지 확인
     private boolean isEraserOn = false;
+    private ObjectInputStream in;
 
-    public DrawingClient(Socket socket, ObjectOutputStream out, String roomName, String userId, String serverAddress, int serverPort) {
+    public DrawingClient(Socket socket, ObjectOutputStream out, ObjectInputStream in,String roomName, String userId, String serverAddress, int serverPort) {
         this.socket=socket;
         this.out=out;
         this.roomName = roomName;
         this.userId = userId;
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
+        this.in = in;
         buildGUI(); // GUI 구성
         connectToServer(); // 서버에 접속요청
     }
@@ -202,10 +204,10 @@ public class DrawingClient extends JFrame {
 
     // 메세지를 수신하는 스레드
     private class ReceiveThread extends Thread {
-        private ObjectInputStream in;
+
 
         public ReceiveThread(Socket socket) throws IOException {
-            in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+           // in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
         }
 
         @Override
