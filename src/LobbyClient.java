@@ -71,7 +71,7 @@ public class LobbyClient extends JFrame {
                             // 방 목록에 새로운 방 추가
                             roomListModel.addElement(roomName);
                             dispose();
-                            new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            new DrawingClient(socket,out,data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
                             System.out.println("새로운 방 추가됨: " + roomName);
                         }
                     }
@@ -89,7 +89,7 @@ public class LobbyClient extends JFrame {
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
                         if (userName.equals(data.getOwnerName())) {
                             dispose();
-                            new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            new DrawingClient(socket,out, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
                         }
                     }
                 } catch (IOException e) {

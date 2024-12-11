@@ -26,7 +26,9 @@ public class DrawingClient extends JFrame {
     // 지우개 사용중인지 확인
     private boolean isEraserOn = false;
 
-    public DrawingClient(String roomName, String userId, String serverAddress, int serverPort) {
+    public DrawingClient(Socket socket, ObjectOutputStream out, String roomName, String userId, String serverAddress, int serverPort) {
+        this.socket=socket;
+        this.out=out;
         this.roomName = roomName;
         this.userId = userId;
         this.serverAddress = serverAddress;
@@ -169,8 +171,12 @@ public class DrawingClient extends JFrame {
         // so, 별도의 스레드에서 네트워크 작업을 수행해야 함.
         new Thread(() -> {
             try {
-                socket = new Socket(serverAddress, serverPort);
-                out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                //socket = new Socket(serverAddress, serverPort);
+                //out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                socket=this.socket;
+                out=this.out;
+
+
                 //out.flush();
 
                 // 서버에 사용자 ID 전송//
