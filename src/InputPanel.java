@@ -11,7 +11,7 @@ public class InputPanel extends JPanel {
     public InputPanel(DrawingClient drawingClient) {
         this.drawingClient = drawingClient;
         setLayout(new BorderLayout());
-        t_input = new JTextField(30);
+        t_input = new JTextField(20);
         b_send = new JButton("채팅 전송");
 
         ActionListener actionListener = new ActionListener() {
