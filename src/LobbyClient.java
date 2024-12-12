@@ -49,7 +49,6 @@ public class LobbyClient extends JFrame {
     private class ReceiveThread extends Thread {
 
 
-
         public ReceiveThread() {
             try {
                 in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
@@ -77,12 +76,11 @@ public class LobbyClient extends JFrame {
                             dispose();
                             receiveThread = null;
 
-                            new DrawingClient(socket,out,in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
                             System.out.println("새로운 방 추가됨: " + roomName);
 
                         }
-                    }
-                    else if (data.getMode() == SketchingData.SHOW_ROOM_LIST) {
+                    } else if (data.getMode() == SketchingData.SHOW_ROOM_LIST) {
                         if (userName.equals(data.getUserID())) {
                             Vector<String> roomList = data.getRoomList();
                             roomListModel.clear(); // 기존 목록을 초기화
@@ -96,7 +94,8 @@ public class LobbyClient extends JFrame {
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
                         if (userName.equals(data.getOwnerName())) {
                             dispose();
-                            new DrawingClient(socket,out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            receiveThread = null;
+                            new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
                         }
                     }
                 } catch (IOException e) {
