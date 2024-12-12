@@ -11,13 +11,13 @@ public class SketchingData implements Serializable {
     public static final int MODE_CHAT = 3;
     public static final int MODE_LINE = 4;
     public static final int MODE_CLIENT_LIST = 5; // 접속자 리스트를 브로드케스팅하기 위한 모드
-/*
+
     public static final int MODE_CORRECT = 6; // 플레이어가 제시어를 맞췄음을 알리기 위한 모드
     public static final int MODE_INDIVIDUAL_READY = 7;      // 한 명의 클라이언트가 준비 버튼을 눌렀을 때의 모드
     public static final int GAME_START = 8; // 모든 사용자들이 게임 시작를 수락 ( + 2명 이상 접속해있는경우) -> 게임이 시작되었음을 알리는 모드(현재 접속자 인원이랑 게임 시작 준비 인원이랑 같을 때)
     public static final int ROUND_START = 9;   // 각 게임 라운드가 시작될 때
     public static final int GAME_OVER = 10; // 정해진 모든 라운드가 종료되어(or 한 플레이어가 특정 maximum 점수에 도달하면) 게임이 종료되었음을 알리는 모드
-*/
+
     public static final int CREATE_ROOM = 11;   // 방을 생성하는 모드
     public static final int SHOW_ROOM_LIST = 12;        // 새로운 클라이언트에게 방의 리스트들을 보여주는 모드
     public static final int ENTER_ROOM = 13;        // 방에 입장하는 모드
@@ -35,7 +35,13 @@ public class SketchingData implements Serializable {
     private Vector<String> roomList;
     private Vector<String> ownerList;
 
-    // 로그인, 로그아웃용 생성자
+    // 준비를 하는지 취소하는지
+    private boolean isReady;
+
+    // 준비완료 요청이 성공됐는지
+    private boolean isSuccess;
+
+    // 로그인, 로그아웃용 생성자 + 게임 시작을 알리는 프로토콜
     public SketchingData(int mode, String userID) {
         this.mode = mode;
         this.userID = userID;
@@ -58,8 +64,9 @@ public class SketchingData implements Serializable {
     }
 
     // 플레이어&점수리스트 전송용 생성자
-    public SketchingData(int mode, Vector<String> userIDList, Vector<Integer> userScoreList) {
+    public SketchingData(int mode, String roomName, Vector<String> userIDList, Vector<Integer> userScoreList) {
         this.mode = mode;
+        this.roomName = roomName;
         this.userIDList = userIDList;
         this.userScoreList = userScoreList;
     }
@@ -78,6 +85,22 @@ public class SketchingData implements Serializable {
         this.mode = mode;
         this.roomList = roomList;
         this.userID = userID;
+    }
+
+    // 클라이언트 -> 서버로 준비 완료 및 취소 요청을 보낼 때
+    public SketchingData(int mode, String roomName, String userID, boolean isReady) {
+        this.mode = mode;
+        this.roomName = roomName;
+        this.userID = userID;
+        this.isReady = isReady;
+    }
+    // 서버 -> 클라이언트로 준비 완료 및 취소 응답을 보낼 때
+    public SketchingData(int mode, String roomName, String userID, boolean isReady, boolean isSuccess) {
+        this.mode = mode;
+        this.roomName = roomName;
+        this.userID = userID;
+        this.isReady = isReady;
+        this.isSuccess = isSuccess;
     }
 
 
@@ -139,5 +162,13 @@ public class SketchingData implements Serializable {
 
     public Vector<String> getOwnerList() {
         return ownerList;
+    }
+
+    public boolean isReady() {
+        return isReady;
+    }
+
+    public boolean isSuccess() {
+        return isSuccess;
     }
 }

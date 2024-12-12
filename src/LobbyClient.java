@@ -16,6 +16,7 @@ public class LobbyClient extends JFrame {
     private String userName, ipAddress;
     private int portNumber;
     private Thread receiveThread = null;
+    ObjectInputStream in = null;
 
     public LobbyClient(String userName, String ipAddress, int portNumber) {
         this.userName = userName;
@@ -47,7 +48,6 @@ public class LobbyClient extends JFrame {
 
     private class ReceiveThread extends Thread {
 
-        ObjectInputStream in = null;
 
         public ReceiveThread() {
             try {
@@ -70,12 +70,17 @@ public class LobbyClient extends JFrame {
 
                             // 방 목록에 새로운 방 추가
                             roomListModel.addElement(roomName);
+                            //how to stop the thread ?
+
+
                             dispose();
-                            new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            receiveThread = null;
+
+                            new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
                             System.out.println("새로운 방 추가됨: " + roomName);
+
                         }
-                    }
-                    else if (data.getMode() == SketchingData.SHOW_ROOM_LIST) {
+                    } else if (data.getMode() == SketchingData.SHOW_ROOM_LIST) {
                         if (userName.equals(data.getUserID())) {
                             Vector<String> roomList = data.getRoomList();
                             roomListModel.clear(); // 기존 목록을 초기화
@@ -89,7 +94,8 @@ public class LobbyClient extends JFrame {
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
                         if (userName.equals(data.getOwnerName())) {
                             dispose();
-                            new DrawingClient(data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            receiveThread = null;
+                            new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
                         }
                     }
                 } catch (IOException e) {
@@ -228,8 +234,8 @@ public class LobbyClient extends JFrame {
 
         dialog.setVisible(true);
     }
-
-    public static void main(String[] args) {
-
-    }
+//
+//    public static void main(String[] args) {
+//
+//    }
 }

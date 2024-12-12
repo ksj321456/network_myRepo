@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class DrawingSetting extends JPanel {
     private DrawingClient drawingClient; // 로그아웃 버튼으로 -> 서버와의 연결을 끊기위해 DrawingClient 객체 저장
@@ -12,6 +14,7 @@ public class DrawingSetting extends JPanel {
     private JLabel isEraser;
     private JLabel word;
     private JButton logoutBtn;
+    private JButton readyButton;
 
     public DrawingSetting(DrawingClient drawingClient) {
         this.drawingClient = drawingClient;
@@ -22,8 +25,10 @@ public class DrawingSetting extends JPanel {
         strokeBox = new JComboBox<>(lineStroke);
         eraser = new JButton("지우개");
         isEraser = new JLabel("지우개 사용중 X");
+        readyButton = new JButton("준비버튼");
         word = new JLabel("???");
 
+        settingsPanel.add(readyButton);
         settingsPanel.add(colorBox);
         settingsPanel.add(strokeBox);
         settingsPanel.add(eraser);
@@ -73,6 +78,10 @@ public class DrawingSetting extends JPanel {
             default:
                 return 1;
         }
+    }
+
+    public JButton getReadyButton() {
+        return readyButton;
     }
 
     public String[] getLineColor() {

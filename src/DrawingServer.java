@@ -22,7 +22,11 @@ public class DrawingServer extends JFrame {
 
     private Vector<String> roomNamesList = new Vector<>();
     private Vector<String> ownerNamesList = new Vector<>();
-    private Map<String, Boolean> rooms = new HashMap<>();
+
+    private Map<String, Map<String, Integer>> rooms = new HashMap<>();
+
+    // key => 방 이름, value => 해당 방에 준비한 플레이어 수
+    private Map<String, Integer> roomReadyCnt = new HashMap<>();
 
     public DrawingServer() {
         setTitle("Hansung Sketch Server");
@@ -187,9 +191,10 @@ public class DrawingServer extends JFrame {
                     //printDisplay("클라이언트로부터 데이터 수신");
                     if (data.getMode() == SketchingData.MODE_LOGIN) { // 읽어온 메시지의 모드값이 로그인 메시지라면
                         userID = data.getUserID(); // uid에 로그인한 클라이언트의 아이디를 저장.
-                        sendPlayerList(); // 각 클라이언트에게 현재 접속중인 플레이어 리스트 전송
+//                        sendPlayerList(); // 각 클라이언트에게 현재 접속중인 플레이어 리스트 전송
                         printDisplay("NEW 플레이어: " + userID);
                         printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers());
+                        broadcast(new SketchingData(SketchingData.MODE_LOGIN, userID));
 
                         // 로그인시 방이 하나라도 있다면 새로운 클라이언트는 존재하는 방들을 확인해야 한다.
                         if (!rooms.isEmpty()) {
@@ -218,18 +223,72 @@ public class DrawingServer extends JFrame {
 
                         // 생성하고자하는 방의 이름이 중복된게 없을 때
                         if (!rooms.containsKey(data.getRoomName())) {
-                            rooms.put(data.getRoomName(), true);
+                            Map<String, Integer> map = new HashMap<>();
+                            map.put(data.getOwnerName(), 0);
+                            // key => 방 이름, value => key: userId, value: score
+                            rooms.put(data.getRoomName(), map);
                             printDisplay("방 생성 (방 이름: " + data.getRoomName() + ") 방 갯수: " + rooms.size());
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
+                            sendPlayerList();
                         }
+                        // 방을 만든 직후이므로 해당 방의 준비 플레이어 수 = 0
+                        roomReadyCnt.put(data.getRoomName(), 0);
                     }
                     // 방에 입장할 때
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
                         // 전달받은 roomName 속성을 통해 방을 찾고 해당 DrawingClient 불러오기
+                        // 입장하고자 하는 방의 이름을 받아 value인 Map 업데이트 한 후 put
+
+                        // 방의 이름을 받아서 Map 객체를 꺼내와 put으로 업데이트
+                        rooms.get(data.getRoomName()).put(data.getOwnerName(), 0);
                         for (String roomName : rooms.keySet()) {
                             if (roomName.equals(data.getRoomName())) {
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
+                                sendPlayerList();
                             }
+                        }
+                    }
+                    // 준비를 하거나 취소할 때의 로직
+                    else if (data.getMode() == SketchingData.MODE_INDIVIDUAL_READY) {
+                        // 준비를 하고자 할 때
+                        if (data.isReady()) {
+
+                            // 혼자 있을 때는 게임 플레이가 불가능 즉, 혼자 방에 있을 때는 준비 불가
+                            if (rooms.get(data.getRoomName()).size() == 1) {
+                                broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), false));
+                                printDisplay(data.getUserID() + " 준비 실패, 2인 이상부터 준비 완료 가능.");
+                                continue;
+                            }
+
+                            int cnt = roomReadyCnt.get(data.getRoomName());
+
+                            cnt += 1;
+                            roomReadyCnt.put(data.getRoomName(), cnt);
+                            // 만약 cnt가 2 이상이고 현재 접속해있는 인원수와 같다면 게임 시작
+                            if (cnt >= 2 && rooms.get(data.getRoomName()).size() == cnt) {
+                                // 우선 플레이어가 준비완료되었음을 알려줌
+                                broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
+                                printDisplay( data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
+                                // 게임 시작을 클라이언트들에게 통지
+                                broadcast(new SketchingData(SketchingData.GAME_START, data.getRoomName()));
+                                printDisplay(data.getRoomName() + " 에서 게임이 시작되었습니다.");
+                            }
+                            // 그렇지 않다면 단순히 클라이언트에 준비완료 사실 전송
+                            else {
+                                printDisplay( data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
+                                broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
+                            }
+                        }
+                        // 준비를 취소하고자 할 때
+                        else {
+                            // 준비 인원수에서 -1
+                            int cnt = roomReadyCnt.get(data.getRoomName());
+                            cnt -= 1;
+                            roomReadyCnt.put(data.getRoomName(), cnt);
+
+                            broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
+
+                            printDisplay( data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 취소");
                         }
                     }
                 }
@@ -259,13 +318,20 @@ public class DrawingServer extends JFrame {
         private void sendPlayerList() {
             Vector<String> userIDList = new Vector<>();
             Vector<Integer> userScoreList = new Vector<>();
+            for (String roomName : rooms.keySet()) {
+                System.out.println(roomName + "으로 ");
+                // roomName으로 value인 Map의 key 값을 받아 userIDList에 저장
 
-            for (ClientHandler client : clients) {
-                userIDList.add(client.userID);
-                userScoreList.add(client.score);
+                Map<String, Integer> map = rooms.get(roomName);
+                for (String userID : map.keySet()) {
+                    userIDList.add(userID);
+                    userScoreList.add(map.get(userID));
+                    System.out.println("userID: " + userID + ", Score: " + map.get(userID) + " 전송");
+                }
+                SketchingData data = new SketchingData(SketchingData.MODE_CLIENT_LIST, roomName, userIDList, userScoreList);
+                System.out.println("클라이언트로 데이터 전송, 방 이름: " + roomName);
+                broadcast(data);
             }
-            SketchingData data = new SketchingData(SketchingData.MODE_CLIENT_LIST, userIDList, userScoreList);
-            broadcast(data);
         }
 
         private String currentPlayers() {
