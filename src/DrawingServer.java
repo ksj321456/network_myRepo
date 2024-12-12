@@ -316,10 +316,11 @@ public class DrawingServer extends JFrame {
         }
 
         private void sendPlayerList() {
-            Vector<String> userIDList = new Vector<>();
-            Vector<Integer> userScoreList = new Vector<>();
             for (String roomName : rooms.keySet()) {
-                System.out.println(roomName + "으로 ");
+                Vector<String> userIDList = new Vector<>();
+                Vector<Integer> userScoreList = new Vector<>();
+
+                System.out.print(roomName + "으로 ");
                 // roomName으로 value인 Map의 key 값을 받아 userIDList에 저장
 
                 Map<String, Integer> map = rooms.get(roomName);
@@ -328,6 +329,7 @@ public class DrawingServer extends JFrame {
                     userScoreList.add(map.get(userID));
                     System.out.println("userID: " + userID + ", Score: " + map.get(userID) + " 전송");
                 }
+
                 SketchingData data = new SketchingData(SketchingData.MODE_CLIENT_LIST, roomName, userIDList, userScoreList);
                 System.out.println("클라이언트로 데이터 전송, 방 이름: " + roomName);
                 broadcast(data);
