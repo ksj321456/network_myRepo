@@ -1,7 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.Vector;
 
@@ -21,6 +23,8 @@ public class DrawingClient extends JFrame {
     private RightUserPanel rightUserPanel;
     private DrawingSetting drawingSetting;
     private InputPanel inputPanel;
+    private BottomPanel bottomPanel;
+
     private boolean isDrawing = false;      // 그림 그리고 있는지 확인
     private Point lastPoint = null;  // 마지막 좌표
     // 지우개 사용중인지 확인
@@ -29,9 +33,9 @@ public class DrawingClient extends JFrame {
     private boolean isReady = false;
     private ObjectInputStream in;
 
-    public DrawingClient(Socket socket, ObjectOutputStream out, ObjectInputStream in,String roomName, String userId, String serverAddress, int serverPort) {
-        this.socket=socket;
-        this.out=out;
+    public DrawingClient(Socket socket, ObjectOutputStream out, ObjectInputStream in, String roomName, String userId, String serverAddress, int serverPort) {
+        this.socket = socket;
+        this.out = out;
         this.roomName = roomName;
         this.userId = userId;
         this.serverAddress = serverAddress;
@@ -47,22 +51,14 @@ public class DrawingClient extends JFrame {
         setSize(1400, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        JPanel centerPanel = new JPanel(new BorderLayout());
         drawPanel = new DrawPanel();
         leftUserPanel = new LeftUserPanel();
         rightUserPanel = new RightUserPanel();
         chatingListPanel = new ChatingListPanel();
         drawingSetting = new DrawingSetting(this);
         inputPanel = new InputPanel(this);
-
-        JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.add(drawPanel, BorderLayout.CENTER);
-        centerPanel.add(leftUserPanel, BorderLayout.WEST);
-        centerPanel.add(rightUserPanel, BorderLayout.EAST);
-        // 이 보더 레이아웃 East 영역을 다른 용도로 활용해보면 어떨까
-        centerPanel.add(drawingSetting, BorderLayout.NORTH);
-
-        centerPanel.add(inputPanel, BorderLayout.SOUTH);
-
+        bottomPanel = new BottomPanel();
 
         drawingSetting.getEraser().addActionListener(new ActionListener() {
             @Override
@@ -70,8 +66,7 @@ public class DrawingClient extends JFrame {
                 if (isEraserOn) {
                     isEraserOn = false;
                     drawingSetting.getIsEraser().setText("지우개 사용중 X");
-                }
-                else {
+                } else {
                     isEraserOn = true;
                     drawingSetting.getIsEraser().setText("지우개 사용중");
                 }
@@ -85,8 +80,7 @@ public class DrawingClient extends JFrame {
                     isReady = false;
                     // 준비를 취소하겠다고 서버에 송신
                     send(new SketchingData(SketchingData.MODE_INDIVIDUAL_READY, roomName, userId, isReady));
-                }
-                else {
+                } else {
                     isReady = true;
                     // 준비를 하겠다고 서버에 송신
                     send(new SketchingData(SketchingData.MODE_INDIVIDUAL_READY, roomName, userId, isReady));
@@ -95,9 +89,19 @@ public class DrawingClient extends JFrame {
         });
 
 
+        centerPanel.add(drawPanel, BorderLayout.CENTER);
+        centerPanel.add(leftUserPanel, BorderLayout.WEST);
+        centerPanel.add(rightUserPanel, BorderLayout.EAST);
+        // 이 보더 레이아웃 East 영역을 다른 용도로 활용해보면 어떨까
+        centerPanel.add(drawingSetting, BorderLayout.NORTH);
+
+        centerPanel.add(bottomPanel, BorderLayout.SOUTH);
+
         add(centerPanel);
-        //add(inputPanel, BorderLayout.SOUTH);
+
+        chatingListPanel.add(inputPanel, BorderLayout.SOUTH);
         add(chatingListPanel, BorderLayout.EAST);
+
         setVisible(true);
     }
 
@@ -217,7 +221,7 @@ public class DrawingClient extends JFrame {
 
 
         public ReceiveThread(Socket socket) throws IOException {
-           // in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+            // in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
         }
 
         @Override
