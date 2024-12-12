@@ -22,7 +22,11 @@ public class DrawingServer extends JFrame {
 
     private Vector<String> roomNamesList = new Vector<>();
     private Vector<String> ownerNamesList = new Vector<>();
+
     private Map<String, Map<String, Integer>> rooms = new HashMap<>();
+
+    // key => 방 이름, value => 해당 방에 준비한 플레이어 수
+    private Map<String, Integer> roomReadyCnt = new HashMap<>();
 
     public DrawingServer() {
         setTitle("Hansung Sketch Server");
@@ -227,6 +231,8 @@ public class DrawingServer extends JFrame {
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
                             sendPlayerList();
                         }
+                        // 방을 만든 직후이므로 해당 방의 준비 플레이어 수 = 0
+                        roomReadyCnt.put(data.getRoomName(), 0);
                     }
                     // 방에 입장할 때
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
@@ -240,6 +246,49 @@ public class DrawingServer extends JFrame {
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
                                 sendPlayerList();
                             }
+                        }
+                    }
+                    // 준비를 하거나 취소할 때의 로직
+                    else if (data.getMode() == SketchingData.MODE_INDIVIDUAL_READY) {
+                        // 준비를 하고자 할 때
+                        if (data.isReady()) {
+
+                            // 혼자 있을 때는 게임 플레이가 불가능 즉, 혼자 방에 있을 때는 준비 불가
+                            if (rooms.get(data.getRoomName()).size() == 1) {
+                                broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), false));
+                                printDisplay(data.getUserID() + " 준비 실패, 2인 이상부터 준비 완료 가능.");
+                                continue;
+                            }
+
+                            int cnt = roomReadyCnt.get(data.getRoomName());
+
+                            cnt += 1;
+                            roomReadyCnt.put(data.getRoomName(), cnt);
+                            // 만약 cnt가 2 이상이고 현재 접속해있는 인원수와 같다면 게임 시작
+                            if (cnt >= 2 && rooms.get(data.getRoomName()).size() == cnt) {
+                                // 우선 플레이어가 준비완료되었음을 알려줌
+                                broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
+                                printDisplay( data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
+                                // 게임 시작을 클라이언트들에게 통지
+                                broadcast(new SketchingData(SketchingData.GAME_START, data.getRoomName()));
+                                printDisplay(data.getRoomName() + " 에서 게임이 시작되었습니다.");
+                            }
+                            // 그렇지 않다면 단순히 클라이언트에 준비완료 사실 전송
+                            else {
+                                printDisplay( data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
+                                broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
+                            }
+                        }
+                        // 준비를 취소하고자 할 때
+                        else {
+                            // 준비 인원수에서 -1
+                            int cnt = roomReadyCnt.get(data.getRoomName());
+                            cnt -= 1;
+                            roomReadyCnt.put(data.getRoomName(), cnt);
+
+                            broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
+
+                            printDisplay( data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 취소");
                         }
                     }
                 }

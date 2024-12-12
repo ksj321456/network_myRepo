@@ -25,6 +25,8 @@ public class DrawingClient extends JFrame {
     private Point lastPoint = null;  // 마지막 좌표
     // 지우개 사용중인지 확인
     private boolean isEraserOn = false;
+    // 현재 플레이어가 준비완료인지
+    private boolean isReady = false;
     private ObjectInputStream in;
 
     public DrawingClient(Socket socket, ObjectOutputStream out, ObjectInputStream in,String roomName, String userId, String serverAddress, int serverPort) {
@@ -72,6 +74,22 @@ public class DrawingClient extends JFrame {
                 else {
                     isEraserOn = true;
                     drawingSetting.getIsEraser().setText("지우개 사용중");
+                }
+            }
+        });
+
+        drawingSetting.getReadyButton().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (isReady) {
+                    isReady = false;
+                    // 준비를 취소하겠다고 서버에 송신
+                    send(new SketchingData(SketchingData.MODE_INDIVIDUAL_READY, roomName, userId, isReady));
+                }
+                else {
+                    isReady = true;
+                    // 준비를 하겠다고 서버에 송신
+                    send(new SketchingData(SketchingData.MODE_INDIVIDUAL_READY, roomName, userId, isReady));
                 }
             }
         });
@@ -225,7 +243,7 @@ public class DrawingClient extends JFrame {
                     }
 
                     // 서버로부터 받는 데이터의 방 이름이 현재 방 이름과 같은 경우만
-                    if (roomName.equals(data.getRoomName())) {
+                    if (roomName.equals(data.getRoomName()) || roomName.equals(data.getUserID())) {
                         switch (data.getMode()) { // 수신된 메시지의 모드값에 따라 다른 처리.
                             case SketchingData.MODE_CHAT: // 채팅모드라면, 서버로부터 전달받은 id 와 문자열 메시지를 화면에 출력.
                                 if (data.getUserID().equals(userId)) {
@@ -254,6 +272,28 @@ public class DrawingClient extends JFrame {
                                 updateUserPanel(userIDList, userScoreList);
                                 break;
 
+                            case SketchingData.MODE_INDIVIDUAL_READY:
+                                // 준비완료 및 취소가 성공적으로 이뤄졌을 때
+                                if (data.isSuccess()) {
+                                    String userId = data.getUserID();
+                                    boolean isReady = data.isReady();
+
+                                    if (isReady) {
+                                        chatingListPanel.addMessage(userId + "님이 준비완료하였습니다.");
+                                    } else {
+                                        chatingListPanel.addMessage(userId + "님이 준비를 취소하였습니다.");
+                                    }
+                                    break;
+                                }
+                                // 준비완료 및 취소가 실패했을 때 ex) 혼자 방에 있는데 준비완료 하는 경우
+                                else {
+                                    chatingListPanel.addMessage("2인 이상 있을 때만 준비완료 가능합니다.");
+                                    isReady = false;
+                                    break;
+                                }
+                            case SketchingData.GAME_START:
+                                chatingListPanel.addMessage("게임이 시작되었습니다.");
+                                break;
                         }
                     }
 //                    else if (data.getMode() == SketchingData.MODE_LOGOUT) {
