@@ -33,7 +33,6 @@ public class SketchingData implements Serializable {
     private String IPAddress;
     private int portNumber;
     private Vector<String> roomList;
-    private Vector<String> ownerList;
 
     // 준비를 하는지 취소하는지
     private boolean isReady;
@@ -47,6 +46,15 @@ public class SketchingData implements Serializable {
         this.userID = userID;
     }
 
+    // 문제를 맞췄을 경우의 프로토콜
+    public SketchingData(int mode, String roomName, String userID, Vector<String> userIDList, Vector<Integer> userScoreList) {
+        this.mode = mode;
+        this.roomName = roomName;
+        this.userID = userID;
+        this.userIDList = userIDList;
+        this.userScoreList = userScoreList;
+    }
+
     // 스케치데이터 전송시 생성자
     public SketchingData(int mode, Line line, String roomName) {
         this.mode = mode;
@@ -56,6 +64,7 @@ public class SketchingData implements Serializable {
     }
 
     // 채팅 메시지 전송시 생성자
+    // 서버에서 라운드 전송시 생성자 => userID는 방 이름, message는 제시어, roomName은 화가의 userID
     public SketchingData(int mode, String userID, String message, String roomName) {
         this.mode = mode;
         this.userID = userID;
@@ -160,9 +169,6 @@ public class SketchingData implements Serializable {
         return roomList;
     }
 
-    public Vector<String> getOwnerList() {
-        return ownerList;
-    }
 
     public boolean isReady() {
         return isReady;

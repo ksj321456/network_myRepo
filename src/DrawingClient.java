@@ -33,6 +33,9 @@ public class DrawingClient extends JFrame {
     private boolean isReady = false;
     private ObjectInputStream in;
 
+    // 현재 그림을 그릴 수 있는 상태인지
+    private boolean canDrawing = false;
+
     public DrawingClient(Socket socket, ObjectOutputStream out, ObjectInputStream in, String roomName, String userId, String serverAddress, int serverPort) {
         this.socket = socket;
         this.out = out;
@@ -102,6 +105,8 @@ public class DrawingClient extends JFrame {
         chatingListPanel.add(inputPanel, BorderLayout.SOUTH);
         add(chatingListPanel, BorderLayout.EAST);
 
+        drawPanel.setEnabled(false);
+
         setVisible(true);
     }
 
@@ -118,26 +123,28 @@ public class DrawingClient extends JFrame {
         // MouseMotionListener 구현
         @Override
         public void mouseDragged(MouseEvent e) {
-            if (isDrawing && lastPoint != null) { // 그리기 상태일 때만 좌표를 전송
-                Color selectedColor = isEraserOn ? Color.WHITE : drawingSetting.getSelectedColor();
-                float selectedWidth = isEraserOn ? 20 : drawingSetting.getSelectedLineWidth();
+            if (canDrawing) {
+                if (isDrawing && lastPoint != null) { // 그리기 상태일 때만 좌표를 전송
+                    Color selectedColor = isEraserOn ? Color.WHITE : drawingSetting.getSelectedColor();
+                    float selectedWidth = isEraserOn ? 20 : drawingSetting.getSelectedLineWidth();
 
-                // Line 객체 생성 및 색깔, 굵기 설정
-                Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY(), selectedColor, selectedWidth);
+                    // Line 객체 생성 및 색깔, 굵기 설정
+                    Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY(), selectedColor, selectedWidth);
 
-                // SketchingData 객체 생성
-                SketchingData sketchingData = new SketchingData(SketchingData.MODE_LINE, line, roomName);
+                    // SketchingData 객체 생성
+                    SketchingData sketchingData = new SketchingData(SketchingData.MODE_LINE, line, roomName);
 
-                // 서버에 Line 객체 전송
-                try {
-                    out.writeObject(sketchingData);
-                    out.flush();
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                    // 서버에 Line 객체 전송
+                    try {
+                        out.writeObject(sketchingData);
+                        out.flush();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    // 마지막 좌표를 현재 좌표로 업데이트
+                    lastPoint = new Point(e.getX(), e.getY());
                 }
-
-                // 마지막 좌표를 현재 좌표로 업데이트
-                lastPoint = new Point(e.getX(), e.getY());
             }
         }
 
@@ -154,13 +161,17 @@ public class DrawingClient extends JFrame {
         // MouseListener 구현
         @Override
         public void mousePressed(MouseEvent e) {
-            isDrawing = true; // 그리기 시작
-            lastPoint = new Point(e.getX(), e.getY()); // 현재 좌표 저장
+            if (canDrawing) {
+                isDrawing = true; // 그리기 시작
+                lastPoint = new Point(e.getX(), e.getY()); // 현재 좌표 저장
+            }
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            isDrawing = false; // 그리기 상태 종료
+            if (canDrawing) {
+                isDrawing = false; // 그리기 상태 종료
+            }
         }
 
         @Override
@@ -289,6 +300,33 @@ public class DrawingClient extends JFrame {
                                 }
                             case SketchingData.GAME_START:
                                 chatingListPanel.addMessage("게임이 시작되었습니다.");
+                                break;
+                            case SketchingData.ROUND_START:
+                                // 제시어
+                                String word = data.getMessage();
+                                // 화가
+                                String painter = data.getRoomName();
+                                chatingListPanel.addMessage(painter + "님이 화가입니다.");
+
+                                // 화가가 아닌 사람들은 제시어 ???로 표시
+                                drawingSetting.getWord().setText("???");
+
+                                // 화가만 그림을 그릴 수 있음, 화가에게만 제시어 표시
+                                if (userId.equals(painter)) {
+                                    drawPanel.setEnabled(true);
+                                    drawingSetting.getWord().setText(word);
+                                    canDrawing = true;
+                                }
+                                break;
+                            // 정답을 맞춘 사람이 나타났을 때
+                            case SketchingData.MODE_CORRECT:
+                                chatingListPanel.addMessage(data.getUserID() + "님이 정답을 맞췄습니다.");
+                                drawPanel.clear();
+
+                                Vector<String> userIdList = data.getuserIDList();
+                                Vector<Integer> userscoreList = data.getuserScoreList();
+
+                                updateUserPanel(userIdList, userscoreList);
                                 break;
                         }
                     }

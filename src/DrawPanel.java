@@ -18,6 +18,12 @@ public class DrawPanel extends JPanel {
         repaint(); // 선이 추가될 때마다 다시 그리기
     }
 
+    // 현재 패널에 그려져 있는 그림 전체 지우기
+    public synchronized void clear() {
+        lines.clear();
+        repaint();
+    }
+
     @Override
     protected synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
