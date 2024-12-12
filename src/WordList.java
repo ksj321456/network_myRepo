@@ -1,7 +1,9 @@
+import java.util.Random;
+
 public class WordList {
 
     // 100개의 문자열
-    public static String[] wordLis = {
+    public static String[] wordList = {
             "강아지", "고양이", "코끼리", "기차", "비행기", "자전거", "나무", "꽃", "바다", "산",
             "책", "의자", "컴퓨터", "핸드폰", "텔레비전", "축구공", "농구공", "피아노", "바이올린", "드럼",
             "사과", "바나나", "포도", "딸기", "수박", "토마토", "호랑이", "사자", "독수리", "펭귄",
@@ -13,4 +15,10 @@ public class WordList {
             "갈대", "호수", "강", "시냇물", "우주", "별", "달", "해", "은하", "로켓",
             "봄", "여름", "가을", "겨울", "눈사람", "선인장", "드럼세트", "마이크", "책상", "지구본"
     };
+
+    public static String getWord() {
+        Random random = new Random();
+        int idx = random.nextInt(100);
+        return wordList[idx];
+    }
 }

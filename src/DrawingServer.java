@@ -8,9 +8,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
+import java.util.List;
 
 public class DrawingServer extends JFrame {
     private static final int PORT = 12345;
@@ -30,6 +29,12 @@ public class DrawingServer extends JFrame {
 
     // key => 방 이름, value => 해당 방에 준비한 플레이어 수
     private Map<String, Integer> roomReadyCnt = new HashMap<>();
+
+    // 현재 해당 게임방이 게임 중인지 아닌지 확인
+    private Map<String, Boolean> isGameMap = new HashMap<>();
+
+    // 현재 해당 게임중인 방의 제시어
+    private Map<String, String> wordMap = new HashMap<>();
 
     public DrawingServer() {
         setTitle("Hansung Sketch Server");
@@ -218,6 +223,50 @@ public class DrawingServer extends JFrame {
                     else if (data.getMode() == SketchingData.MODE_CHAT) {
                         printDisplay("[채팅 메시지]" + userID + ": " + data.getMessage());
                         broadcast(data);
+
+                        // 해당 방이 게임 중이고 정답을 맞췄을 경우
+                        if (isGameMap.get(data.getRoomName())) {
+                            if (data.getMessage().equals(wordMap.get(data.getRoomName()))) {
+                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + "님이 정답을 맞췄습니다. -> 10점 추가");
+
+                                Vector<String> userIDList = new Vector<>();
+                                Vector<Integer> userScoreList = new Vector<>();
+
+                                // 정답을 맞춘 플레이어에게 10점을 추가해도 50점이 안 될 때
+                                if (rooms.get(data.getRoomName()).get(data.getUserID()) + 10 != 50) {
+                                    // 정답자에게 10점 추가
+                                    int newScore = rooms.get(data.getRoomName()).get(data.getUserID()) + 10;
+                                    Map<String, Integer> map = rooms.get(data.getRoomName());
+                                    map.put(data.getUserID(), newScore);
+                                    rooms.put(data.getRoomName(), map);
+
+                                    for (String userId : map.keySet()) {
+                                        userIDList.add(userId);
+                                        userScoreList.add(map.get(userId));
+                                    }
+                                    // 클라이언트에게 누가 정답을 맞췄는지 통보
+                                    broadcast(new SketchingData(SketchingData.MODE_CORRECT, data.getRoomName(), data.getUserID(), userIDList, userScoreList));
+
+                                    // 새로운 라운드 시작
+                                    String word = WordList.getWord();
+
+                                    // painter => 정답을 맞춘 사람이 화가가 됨
+                                    String painter = data.getUserID();
+
+                                    // 클라이언트에 모드값, 방 이름, 제시어, 화가가 될 클라이언트 랜덤으로 선정 후 전송
+                                    broadcast(new SketchingData(SketchingData.ROUND_START, data.getRoomName(), word, painter));
+                                    // 해당 게임 방은 게임 중으로 설정
+                                    isGameMap.put(data.getRoomName(), true);
+                                    wordMap.put(data.getRoomName(),word);
+                                    printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.");
+                                }
+                                // 정답을 맞춘 플레이어가 50점을 달성하였을 경우
+                                else {
+
+                                }
+                            }
+                        }
+
                     } else if (data.getMode() == SketchingData.MODE_LINE) {
                         Line line = data.getLine();
                         //printDisplay("그리기 좌표: " + line.getX1() + ", " + line.getY1() + ", " + line.getX2() + ", " + line.getY2());
@@ -232,6 +281,8 @@ public class DrawingServer extends JFrame {
                             // key => 방 이름, value => key: userId, value: score
                             rooms.put(data.getRoomName(), map);
                             printDisplay("방 생성 (방 이름: " + data.getRoomName() + ") 방 갯수: " + rooms.size());
+                            // 현재 게임 방은 게임 중이 아님
+                            isGameMap.put(data.getRoomName(), false);
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
                             sendPlayerList();
                         }
@@ -276,6 +327,28 @@ public class DrawingServer extends JFrame {
                                 // 게임 시작을 클라이언트들에게 통지
                                 broadcast(new SketchingData(SketchingData.GAME_START, data.getRoomName()));
                                 printDisplay(data.getRoomName() + " 에서 게임이 시작되었습니다.");
+
+                                // 바로 라운드 시작
+                                // word => 제시어
+                                String word = WordList.getWord();
+
+                                Map<String, Integer> map = rooms.get(data.getRoomName());
+                                List<String> list = new ArrayList<>();
+                                for (String userId : map.keySet()) {
+                                    list.add(userId);
+                                }
+                                Random random = new Random();
+                                int idx = random.nextInt(list.size());
+
+                                // painter => 랜덤으로 선정한 화가
+                                String painter = list.get(idx);
+
+                                // 클라이언트에 모드값, 방 이름, 제시어, 화가가 될 클라이언트 랜덤으로 선정 후 전송
+                                broadcast(new SketchingData(SketchingData.ROUND_START, data.getRoomName(), word, painter));
+                                // 해당 게임 방은 게임 중으로 설정
+                                isGameMap.put(data.getRoomName(), true);
+                                wordMap.put(data.getRoomName(),word);
+                                printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.");
                             }
                             // 그렇지 않다면 단순히 클라이언트에 준비완료 사실 전송
                             else {
@@ -296,7 +369,6 @@ public class DrawingServer extends JFrame {
                         }
                     }
                 }
-///////////////////////////
 
                 // 기존 알고리즘의 문제점: clients.remove(this); 를 통해 모든 방의 사용자관리 벡터에서 해당 사용자를 제거해주었으나, 정작 게임방 관리 맵에서는 제거해주지 않았음
                 // 클라이언트 소켓이 종료될 때 rooms 맵에서 해당 게임방의 해당 사용자 제거
@@ -373,25 +445,6 @@ public class DrawingServer extends JFrame {
         private void broadcast(SketchingData data) {
             synchronized (clients) {
                 for (ClientHandler client : clients) {
-                    client.sendData(data);
-                }
-            }
-        }
-
-        // 하나의 클라이언트에게만 데이터 전송
-        private void sendOnlyOne(SketchingData data, String userID) {
-            synchronized (clients) {
-                for (ClientHandler clientHandler : clients) {
-                    if (clientHandler.userID.equals(userID)) {
-                        sendData(data);
-                    }
-                }
-            }
-        }
-
-        private void broadcastOthers(SketchingData data, ClientHandler sender) {
-            for (ClientHandler client : clients) {
-                if (client != sender) {  // 전송자를 제외하고 브로드캐스팅
                     client.sendData(data);
                 }
             }
