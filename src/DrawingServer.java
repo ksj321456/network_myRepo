@@ -16,6 +16,8 @@ public class DrawingServer extends JFrame {
     private static final int PORT = 12345;
     private ServerSocket serverSocket = null;
     private Thread acceptThread = null;
+
+    // 게임에 접속한 모든 클라이언트들을 저장하는 벡터(특정 게임방에 있는 클라이언트들을 저장하는 벡터가 아님. 모든 방의 클라이언트들을 저장)
     private Vector<ClientHandler> clients = new Vector<>();
     private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
@@ -23,6 +25,7 @@ public class DrawingServer extends JFrame {
     private Vector<String> roomNamesList = new Vector<>();
     private Vector<String> ownerNamesList = new Vector<>();
 
+    //각 게임방별로 유저들을 관리하는 맵(특정 게임방에 있는 클라이언트들을 저장하는 hashMap)
     private Map<String, Map<String, Integer>> rooms = new HashMap<>();
 
     // key => 방 이름, value => 해당 방에 준비한 플레이어 수
@@ -163,6 +166,7 @@ public class DrawingServer extends JFrame {
             }
         }
     }
+
     private class ClientHandler extends Thread {
         private final Socket clientSocket;
         private ObjectOutputStream out;
@@ -268,14 +272,14 @@ public class DrawingServer extends JFrame {
                             if (cnt >= 2 && rooms.get(data.getRoomName()).size() == cnt) {
                                 // 우선 플레이어가 준비완료되었음을 알려줌
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
-                                printDisplay( data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
+                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
                                 // 게임 시작을 클라이언트들에게 통지
                                 broadcast(new SketchingData(SketchingData.GAME_START, data.getRoomName()));
                                 printDisplay(data.getRoomName() + " 에서 게임이 시작되었습니다.");
                             }
                             // 그렇지 않다면 단순히 클라이언트에 준비완료 사실 전송
                             else {
-                                printDisplay( data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
+                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
                             }
                         }
@@ -288,10 +292,27 @@ public class DrawingServer extends JFrame {
 
                             broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
 
-                            printDisplay( data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 취소");
+                            printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 취소");
                         }
                     }
                 }
+///////////////////////////
+
+                // 기존 알고리즘의 문제점: clients.remove(this); 를 통해 모든 방의 사용자관리 벡터에서 해당 사용자를 제거해주었으나, 정작 게임방 관리 맵에서는 제거해주지 않았음
+                // 클라이언트 소켓이 종료될 때 rooms 맵에서 해당 게임방의 해당 사용자 제거
+                for (String roomName : rooms.keySet()) {
+                    Map<String, Integer> room = rooms.get(roomName);
+                    if (room.containsKey(userID)) {
+                        room.remove(userID);
+                        // 방에 사용자가 없으면 방 자체를 제거
+                        if (room.isEmpty()) {
+                            rooms.remove(roomName);
+                        }
+                        break;
+                    }
+                }
+///////////////////////////
+
                 //while문을 빠져나왔다는 것은 클라이언트와의 연결이 끊어졌다는 뜻.
                 clients.remove(this); // 연결이 끊은 클라이언트를 사용자벡터에서 제거. 현재 작업스레드를 벡터에서 제거.
                 sendPlayerList(); // 한 플레이어가 퇴장했으므로, 플레이어 리스트를 갱신하여 모든 클라이언트에게 전송.
@@ -350,7 +371,7 @@ public class DrawingServer extends JFrame {
         }
 
         private void broadcast(SketchingData data) {
-            synchronized(clients) {
+            synchronized (clients) {
                 for (ClientHandler client : clients) {
                     client.sendData(data);
                 }
@@ -360,7 +381,7 @@ public class DrawingServer extends JFrame {
         // 하나의 클라이언트에게만 데이터 전송
         private void sendOnlyOne(SketchingData data, String userID) {
             synchronized (clients) {
-                for(ClientHandler clientHandler : clients) {
+                for (ClientHandler clientHandler : clients) {
                     if (clientHandler.userID.equals(userID)) {
                         sendData(data);
                     }
@@ -401,7 +422,6 @@ public class DrawingServer extends JFrame {
             System.exit(-1);
         }
     }
-
 
 
     private void printDisplay(String msg) {
