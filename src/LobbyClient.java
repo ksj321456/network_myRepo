@@ -174,15 +174,12 @@ public class LobbyClient extends JFrame {
 
     private void openRoomCreationDialog() {
         JDialog dialog = new JDialog(this, "Create Room", true);
-        dialog.setLayout(new GridLayout(3, 2, 10, 10));
+        dialog.setLayout(new GridLayout(2, 2, 10, 10));
         dialog.setSize(300, 200);
         dialog.setLocationRelativeTo(this);
 
         JLabel lbl_roomName = new JLabel("방 이름:");
         JTextField txt_roomName = new JTextField();
-
-        JLabel lbl_maxPlayers = new JLabel("최대 인원수:");
-        JTextField txt_maxPlayers = new JTextField();
 
         JButton btn_ok = new JButton("확인");
         JButton btn_cancel = new JButton("취소");
@@ -191,25 +188,16 @@ public class LobbyClient extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String roomName = txt_roomName.getText().trim();
-                String maxPlayersText = txt_maxPlayers.getText().trim();
 
-                if (roomName.isEmpty() || maxPlayersText.isEmpty()) {
+                if (roomName.isEmpty()) {
                     JOptionPane.showMessageDialog(dialog, "모든 컴포넌트에 입력해야함", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 try {
-                    int maxPlayers = Integer.parseInt(maxPlayersText);
-                    if (maxPlayers < 2 || maxPlayers > 8) {
-                        JOptionPane.showMessageDialog(dialog, "2 ~ 8 까지의 정수여야함.", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
 
                     send(new SketchingData(SketchingData.CREATE_ROOM, roomName, userName, ipAddress, portNumber));
                     System.out.println("서버에 방 생성 정보 전송");
-                    String roomInfo = roomName + " (최대 인원수 : " + maxPlayers + ")";
-//                    roomListModel.addElement(roomInfo); // 방 목록에 추가
-//                    System.out.println("방 생성: " + roomInfo);
 
                     dialog.dispose();
                 } catch (NumberFormatException ex) {
@@ -227,8 +215,6 @@ public class LobbyClient extends JFrame {
 
         dialog.add(lbl_roomName);
         dialog.add(txt_roomName);
-        dialog.add(lbl_maxPlayers);
-        dialog.add(txt_maxPlayers);
         dialog.add(btn_ok);
         dialog.add(btn_cancel);
 
