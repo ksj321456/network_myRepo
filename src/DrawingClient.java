@@ -11,6 +11,7 @@ public class DrawingClient extends JFrame {
     private String serverAddress = "localhost";
     private int serverPort = 12345;
     private String userId; // 사용자 ID
+    private String roomName;    // 방 이름
 
     private Socket socket;
     private ObjectOutputStream out;
@@ -24,15 +25,20 @@ public class DrawingClient extends JFrame {
     private Point lastPoint = null;  // 마지막 좌표
     // 지우개 사용중인지 확인
     private boolean isEraserOn = false;
+    // 현재 플레이어가 준비완료인지
+    private boolean isReady = false;
+    private ObjectInputStream in;
 
-
-    public DrawingClient(String userId, String serverAddress, int serverPort) {
+    public DrawingClient(Socket socket, ObjectOutputStream out, ObjectInputStream in,String roomName, String userId, String serverAddress, int serverPort) {
+        this.socket=socket;
+        this.out=out;
+        this.roomName = roomName;
         this.userId = userId;
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
+        this.in = in;
         buildGUI(); // GUI 구성
         connectToServer(); // 서버에 접속요청
-
     }
 
     private void buildGUI() {
@@ -72,6 +78,22 @@ public class DrawingClient extends JFrame {
             }
         });
 
+        drawingSetting.getReadyButton().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (isReady) {
+                    isReady = false;
+                    // 준비를 취소하겠다고 서버에 송신
+                    send(new SketchingData(SketchingData.MODE_INDIVIDUAL_READY, roomName, userId, isReady));
+                }
+                else {
+                    isReady = true;
+                    // 준비를 하겠다고 서버에 송신
+                    send(new SketchingData(SketchingData.MODE_INDIVIDUAL_READY, roomName, userId, isReady));
+                }
+            }
+        });
+
 
         add(centerPanel);
         //add(inputPanel, BorderLayout.SOUTH);
@@ -100,7 +122,7 @@ public class DrawingClient extends JFrame {
                 Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY(), selectedColor, selectedWidth);
 
                 // SketchingData 객체 생성
-                SketchingData sketchingData = new SketchingData(SketchingData.MODE_LINE, line);
+                SketchingData sketchingData = new SketchingData(SketchingData.MODE_LINE, line, roomName);
 
                 // 서버에 Line 객체 전송
                 try {
@@ -169,21 +191,25 @@ public class DrawingClient extends JFrame {
         // so, 별도의 스레드에서 네트워크 작업을 수행해야 함.
         new Thread(() -> {
             try {
-                socket = new Socket(serverAddress, serverPort);
-                out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                //socket = new Socket(serverAddress, serverPort);
+                //out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                socket=this.socket;
+                out=this.out;
+
+
                 //out.flush();
 
                 // 서버에 사용자 ID 전송//
                 // connectToServer 메서드가 out 객체를 초기화하기 전에 sendUserID 메서드가 호출되면, out 객체가 null이므로 NullPointerException 발생.
                 // 이를 방지하기 위해 sendUserID 메서드를 connectToServer 메서드 내부에서 호출하도록 변경.
-                sendUserID(); // drawingThread & sendCoordsThread 스레드 실행 전에 꼭 먼저 실행되어야 함. 그렇지않으면 채팅 및 그리기 동작 이후에서야 아이디 전송이 이루어지게 됨.
+//                sendUserID(); // drawingThread & sendCoordsThread 스레드 실행 전에 꼭 먼저 실행되어야 함. 그렇지않으면 채팅 및 그리기 동작 이후에서야 아이디 전송이 이루어지게 됨.
 
                 //순서: 그리기를 실행하는 스레드 실행 후 -> 데이터 수신 스레드 실행. 역순으로하게되면 채팅 전송하기전까지 그림을 그릴 수 없음.
                 DrawingThread drawingThread = new DrawingThread();
                 drawingThread.start();
 
-                Thread sendCoordsThread = new ReceiveThread(socket);
-                sendCoordsThread.start(); //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 미준수시 데드락 발생 가능성 있음.
+                Thread receiveThread = new ReceiveThread(socket);
+                receiveThread.start(); //ObjectOutputStream을 ObjectInputStream보다 먼저 생성해야 함. 미준수시 데드락 발생 가능성 있음.
 
                 // 서버에 접속한 사용자를 UserPanel에 추가
                 //addUser(userId); // 클라이언트가 직접 추가하는게 아닌, 서버에서 현재 접속자들 받아오는 방식으로 변경.
@@ -196,10 +222,10 @@ public class DrawingClient extends JFrame {
 
     // 메세지를 수신하는 스레드
     private class ReceiveThread extends Thread {
-        private ObjectInputStream in;
+
 
         public ReceiveThread(Socket socket) throws IOException {
-            in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+           // in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
         }
 
         @Override
@@ -216,26 +242,59 @@ public class DrawingClient extends JFrame {
                         return;
                     }
 
-                    switch (data.getMode()) { // 수신된 메시지의 모드값에 따라 다른 처리.
-                        case SketchingData.MODE_CHAT: // 채팅모드라면, 서버로부터 전달받은 id 와 문자열 메시지를 화면에 출력.
-                            if (data.getUserID().equals(userId)) {
-                                chatingListPanel.addMessage("나: " + data.getMessage());
-                            } else {
-                                chatingListPanel.addMessage(data.getUserID() + ": " + data.getMessage());
-                            }
-                            break;
+                    // 서버로부터 받는 데이터의 방 이름이 현재 방 이름과 같은 경우만
+                    if (roomName.equals(data.getRoomName()) || roomName.equals(data.getUserID())) {
+                        switch (data.getMode()) { // 수신된 메시지의 모드값에 따라 다른 처리.
+                            case SketchingData.MODE_CHAT: // 채팅모드라면, 서버로부터 전달받은 id 와 문자열 메시지를 화면에 출력.
+                                if (data.getUserID().equals(userId)) {
+                                    chatingListPanel.addMessage("나: " + data.getMessage());
+                                } else {
+                                    chatingListPanel.addMessage(data.getUserID() + ": " + data.getMessage());
+                                }
+                                System.out.println(data.getRoomName() + "에서 채팅");
+                                break;
 
-                        case SketchingData.MODE_LINE:  // 그리기 모드를 받았을 때
-                            Line line = data.getLine();
-                            drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2(), line.getColor(), line.getLineWidth());
-                            break;
+                            case SketchingData.MODE_LINE:  // 그리기 모드를 받았을 때
+                                Line line = data.getLine();
+                                drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2(), line.getColor(), line.getLineWidth());
+                                break;
 
-                        case SketchingData.MODE_CLIENT_LIST:
-                            Vector<String> userIDList = data.getuserIDList();
-                            Vector<Integer> userScoreList = data.getuserScoreList();
-                            updateUserPanel(userIDList, userScoreList);
-                            break;
+                            case SketchingData.MODE_CLIENT_LIST:
+                                Vector<String> userIDList = data.getuserIDList();
+                                Vector<Integer> userScoreList = data.getuserScoreList();
+                                System.out.println("userIDList size = " + userIDList.size());
+                                for (String userID : userIDList) {
+                                    System.out.println("userID: " + userID);
+                                }
+                                for (int score : userScoreList) {
+                                    System.out.println("score: " + score);
+                                }
+                                updateUserPanel(userIDList, userScoreList);
+                                break;
 
+                            case SketchingData.MODE_INDIVIDUAL_READY:
+                                // 준비완료 및 취소가 성공적으로 이뤄졌을 때
+                                if (data.isSuccess()) {
+                                    String userId = data.getUserID();
+                                    boolean isReady = data.isReady();
+
+                                    if (isReady) {
+                                        chatingListPanel.addMessage(userId + "님이 준비완료하였습니다.");
+                                    } else {
+                                        chatingListPanel.addMessage(userId + "님이 준비를 취소하였습니다.");
+                                    }
+                                    break;
+                                }
+                                // 준비완료 및 취소가 실패했을 때 ex) 혼자 방에 있는데 준비완료 하는 경우
+                                else {
+                                    chatingListPanel.addMessage("2인 이상 있을 때만 준비완료 가능합니다.");
+                                    isReady = false;
+                                    break;
+                                }
+                            case SketchingData.GAME_START:
+                                chatingListPanel.addMessage("게임이 시작되었습니다.");
+                                break;
+                        }
                     }
 //                    else if (data.getMode() == SketchingData.MODE_LOGOUT) {
 //                        removeUser(data.getUserID());
@@ -312,12 +371,8 @@ public class DrawingClient extends JFrame {
         if (message.isEmpty())
             return;
 
-        send(new SketchingData(SketchingData.MODE_CHAT, userId, message));
+        send(new SketchingData(SketchingData.MODE_CHAT, userId, message, roomName));
         // ChatMsg 객체로 만들어서 전송.
-    }
-
-    private void sendUserID() {
-        send(new SketchingData(SketchingData.MODE_LOGIN, userId)); // 서버에게 로그인 모드&사용자 아이디값을 전달. 서버가 이 아이디값을 통해 클라이언트를 식별.
     }
 
 //
