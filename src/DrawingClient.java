@@ -43,7 +43,7 @@ public class DrawingClient extends JFrame {
 
     private void buildGUI() {
         setResizable(false);
-        setTitle("Hansung Sketch");
+        setTitle("Hansung Sketch " + roomName);
         setSize(1400, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -191,14 +191,6 @@ public class DrawingClient extends JFrame {
         // so, 별도의 스레드에서 네트워크 작업을 수행해야 함.
         new Thread(() -> {
             try {
-                //socket = new Socket(serverAddress, serverPort);
-                //out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                socket=this.socket;
-                out=this.out;
-
-
-                //out.flush();
-
                 // 서버에 사용자 ID 전송//
                 // connectToServer 메서드가 out 객체를 초기화하기 전에 sendUserID 메서드가 호출되면, out 객체가 null이므로 NullPointerException 발생.
                 // 이를 방지하기 위해 sendUserID 메서드를 connectToServer 메서드 내부에서 호출하도록 변경.

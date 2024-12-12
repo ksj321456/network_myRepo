@@ -150,7 +150,7 @@ public class LobbyClient extends JFrame {
                     System.out.println("입장 " + selectedRoom + "!");
 
                     // DrawingClient로 이동
-                    String roomName = selectedRoom.split(" ")[0];  // 방 이름만 추출 (방장:이름 부분 제거)
+                    String roomName = selectedRoom.split(" ")[0];  // 방 이름
 
                     // 서버에 입장하고자 하는 데이터 전송 => 모드값, 방 이름, 유저 이름
                     send(new SketchingData(SketchingData.ENTER_ROOM, roomName, userName, ipAddress, portNumber));
