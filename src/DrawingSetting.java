@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class DrawingSetting extends JPanel {
     private DrawingClient drawingClient; // 로그아웃 버튼으로 -> 서버와의 연결을 끊기위해 DrawingClient 객체 저장
@@ -15,10 +13,11 @@ public class DrawingSetting extends JPanel {
     private JLabel word;
     private JButton logoutBtn;
     private JButton readyButton;
+    private CountDownBar countDownBar;
 
-    public DrawingSetting(DrawingClient drawingClient) {
+    public DrawingSetting(DrawingClient drawingClient, CountDownBar countDownBar) {
         this.drawingClient = drawingClient;
-
+        this.countDownBar = countDownBar;
         setLayout(new BorderLayout());
         JPanel settingsPanel = new JPanel(new FlowLayout());
         colorBox = new JComboBox<>(lineColor);
@@ -40,7 +39,14 @@ public class DrawingSetting extends JPanel {
         logoutBtn.addActionListener(e -> {
             drawingClient.disconnect();
         });
-        add(logoutBtn, BorderLayout.WEST);
+
+        //countDownBar.setPreferredSize(new Dimension(300, 50)); // 예시: 너비 100, 높이 70으로 고정
+        // 왼쪽에 CountDownBar를 배치할 패널 생성
+        JPanel westPanel = new JPanel(new FlowLayout(FlowLayout.LEFT)); // 왼쪽 정렬
+        westPanel.add(countDownBar);
+        add(westPanel, BorderLayout.WEST); // BorderLayout의 WEST 영역에 추가
+        add(logoutBtn, BorderLayout.EAST);
+
     }
 
     public Color getSelectedColor() {
