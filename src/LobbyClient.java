@@ -92,10 +92,17 @@ public class LobbyClient extends JFrame {
                     }
                     // 방에 입장
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
-                        if (userName.equals(data.getOwnerName())) {
-                            dispose();
-                            receiveThread = null;
-                            new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                        // 해당 방 인원 수가 8명 미만인 경우에만 입장 가능
+                        if (data.isSuccess()) {
+                            if (userName.equals(data.getOwnerName())) {
+                                dispose();
+                                receiveThread = null;
+                                new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                            }
+                        }
+                        // 그렇지 않으면 입장 불가 -> 다이얼로그로 입장 불가 메세지 표시
+                        else {
+                            JOptionPane.showMessageDialog(null, "방이 이미 가득찼으므로 입장할 수 없습니다.");
                         }
                     }
                 } catch (IOException e) {

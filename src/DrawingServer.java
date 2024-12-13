@@ -304,7 +304,7 @@ public class DrawingServer extends JFrame {
                             printDisplay("방 생성 (방 이름: " + data.getRoomName() + ") 방 갯수: " + rooms.size());
                             // 현재 게임 방은 게임 중이 아님
                             isGameMap.put(data.getRoomName(), false);
-                            broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
+                            broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), true));
                             sendPlayerList();
                         }
                         // 방을 만든 직후이므로 해당 방의 준비 플레이어 수 = 0
@@ -319,8 +319,14 @@ public class DrawingServer extends JFrame {
                         rooms.get(data.getRoomName()).put(data.getOwnerName(), 0);
                         for (String roomName : rooms.keySet()) {
                             if (roomName.equals(data.getRoomName())) {
-                                broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber()));
-                                sendPlayerList();
+                                // 방 인원이 8명 이하일 때만 입장 가능
+                                if (rooms.get(data.getRoomName()).size() <= 8) {
+                                    broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), true));
+                                    sendPlayerList();
+                                }
+                                else {
+                                    broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), false));
+                                }
                             }
                         }
                     }
