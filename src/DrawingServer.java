@@ -262,7 +262,7 @@ public class DrawingServer extends JFrame {
                                 }
                                 // 정답을 맞춘 플레이어가 50점을 달성하였을 경우
                                 else {
-
+                                    printDisplay(data.getRoomName() + " 방에서 우승자가 나왔습니다. ** " + data.getUserID() + " **");
                                 }
                             }
                         }
