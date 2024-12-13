@@ -5,16 +5,21 @@ public class ChatingListPanel extends JPanel {
     private DefaultListModel<String> chatModel; //DefaultListModel=> JList에 출력될 채팅 내용들을 저장-관리하는 모델. DefaultListModel를 사용하여 JList에 데이터를 추가&삭제
     private JList<String> chatList; // 채팅 내용을 보여줄 JList
     private JScrollPane scrollPane;
+    private JLabel l_word;
+    private Font beforeStartFont;
+    private Font afterStartFont;
 
     public ChatingListPanel() {
         setLayout(new BorderLayout()); // BorderLayout 사용
         setBackground(new Color(180, 222, 255));
         setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5)); // 패널의 가장자리 여백 설정
 
-        // 제목 라벨 추가
-        JLabel l_Title = new JLabel("Let's draw~!!", SwingConstants.CENTER);
-        l_Title.setFont(new Font("Comic Sans MS", Font.BOLD, 40));
-        add(l_Title, BorderLayout.NORTH);
+        beforeStartFont = new Font("Comic Sans MS", Font.BOLD, 40); // 게임 시작 전 안내용 폰트
+        afterStartFont = new Font("맑은 고딕", Font.BOLD, 30); // 게임 시작 후 제시어 전용 폰트
+
+        l_word = new JLabel("Let's draw~!!", SwingConstants.CENTER);
+        l_word.setFont(beforeStartFont); // 게임 시작전 폰트 설정
+        add(l_word, BorderLayout.NORTH);
 
         // 채팅 리스트 추가
         chatModel = new DefaultListModel<>();
@@ -67,5 +72,15 @@ public class ChatingListPanel extends JPanel {
 
             return component; //렌더링된 컴포넌트(꾸며진 채팅메시지 셀)를 반환
         }
+    }
+
+    public void setWord(String frondWord, String word) {
+        // 제시어 부분은 파란색으로 표시하여 구분, html 태그 사용
+        String fullText = "<html>" + frondWord + "<span style='color: blue;'>" + word + "</span></html>";
+        l_word.setText(fullText);
+    }
+
+    public void setAfterStartFont() { // 게임 시작 후 제시어전용 폰트로 변경
+        l_word.setFont(afterStartFont);
     }
 }

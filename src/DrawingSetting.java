@@ -10,7 +10,7 @@ public class DrawingSetting extends JPanel {
     private JComboBox<String> strokeBox;
     private JButton eraser;
     private JLabel isEraser;
-    private JLabel word;
+    //private JLabel word;
     private JButton logoutBtn;
     private JButton readyButton;
     private CountDownBar countDownBar;
@@ -25,14 +25,14 @@ public class DrawingSetting extends JPanel {
         eraser = new JButton("지우개");
         isEraser = new JLabel("지우개 사용중 X");
         readyButton = new JButton("준비버튼");
-        word = new JLabel("???");
+        //word = new JLabel("???");
 
         settingsPanel.add(readyButton);
         settingsPanel.add(colorBox);
         settingsPanel.add(strokeBox);
         settingsPanel.add(eraser);
         settingsPanel.add(isEraser);
-        settingsPanel.add(word);
+        //settingsPanel.add(word);
         add(settingsPanel, BorderLayout.CENTER);
 
         logoutBtn = new JButton("로그아웃");
@@ -136,13 +136,13 @@ public class DrawingSetting extends JPanel {
         this.eraser = eraser;
     }
 
-    public JLabel getWord() {
+ /*   public JLabel getWord() {
         return word;
-    }
+    }*/
 
-    public void setWord(JLabel word) {
+    /*public void setWord(JLabel word) {
         this.word = word;
-    }
+    }*/
 
     public JLabel getIsEraser() {
         return isEraser;

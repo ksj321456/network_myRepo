@@ -82,7 +82,7 @@ public class DrawingClient extends JFrame {
         leftUserPanel = new LeftUserPanel();
         rightUserPanel = new RightUserPanel();
         chatingListPanel = new ChatingListPanel();
-        countDownBar = new CountDownBar(20); // 카운트다운바 생성(인자값: 카운트다운 시간)
+        countDownBar = new CountDownBar(30); // 카운트다운바 생성(인자값: 카운트다운 시간)
         drawingSetting = new DrawingSetting(this, countDownBar);
         inputPanel = new InputPanel(this);
         bottomPanel = new BottomPanel();
@@ -326,8 +326,10 @@ public class DrawingClient extends JFrame {
                                     break;
                                 }
                             case SketchingData.GAME_START:
+                                chatingListPanel.setAfterStartFont(); // 게임 시작 후 제시어전용 폰트로 변경
                                 chatingListPanel.addMessage("게임이 시작되었습니다.");
                                 break;
+
                             case SketchingData.ROUND_START:
                                 countDownBar.start(); // 라운드 시작 시 카운트다운 시작
                                 // 제시어
@@ -336,14 +338,17 @@ public class DrawingClient extends JFrame {
                                 String painter = data.getRoomName();
                                 chatingListPanel.addMessage(painter + "님이 화가입니다.");
 
-                                // 화가가 아닌 사람들은 제시어 ???로 표시
-                                drawingSetting.getWord().setText("???");
-
                                 // 화가만 그림을 그릴 수 있음, 화가에게만 제시어 표시
                                 if (userId.equals(painter)) {
                                     drawPanel.setEnabled(true);
-                                    drawingSetting.getWord().setText(word);
+                                    chatingListPanel.setWord("제시어: ", word);
                                     canDrawing = true;
+                                } else {// 화가가 아닌 사람들은 제시어 ???로 표시
+                                    StringBuilder maskedWord = new StringBuilder();
+                                    for (int i = 0; i < word.length(); i++) {
+                                        maskedWord.append("?");
+                                    }
+                                    chatingListPanel.setWord("제시어: ", maskedWord.toString());
                                 }
                                 break;
                             // 정답을 맞춘 사람이 나타났을 때
