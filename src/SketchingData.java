@@ -81,13 +81,23 @@ public class SketchingData implements Serializable {
         this.userScoreList = userScoreList;
     }
 
-    // 방 생성 관련 생성자, 방 입장 관련 생성자
+    // 클라이언트에서 서버로 방 생성, 입장 관련 생성자
     public SketchingData(int mode, String roomName, String ownerName, String IPAddress, int portNumber) {
         this.mode = mode;
         this.roomName = roomName;
         this.ownerName = ownerName;
         this.IPAddress = IPAddress;
         this.portNumber = portNumber;
+    }
+
+    // 서버에서 클라이언트로 방 생성 관련 생성자, 방 입장 관련 생성자
+    public SketchingData(int mode, String roomName, String ownerName, String IPAddress, int portNumber, boolean isSuccess) {
+        this.mode = mode;
+        this.roomName = roomName;
+        this.ownerName = ownerName;
+        this.IPAddress = IPAddress;
+        this.portNumber = portNumber;
+        this.isSuccess = isSuccess;
     }
 
     // 현재 존재하는 방에 리스트들을 갖고올 때의 생성자
