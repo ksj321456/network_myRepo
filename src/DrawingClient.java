@@ -82,7 +82,7 @@ public class DrawingClient extends JFrame {
         leftUserPanel = new LeftUserPanel();
         rightUserPanel = new RightUserPanel();
         chatingListPanel = new ChatingListPanel();
-        countDownBar = new CountDownBar(60); // 60초 카운트다운바 생성
+        countDownBar = new CountDownBar(20); // 카운트다운바 생성(인자값: 카운트다운 시간)
         drawingSetting = new DrawingSetting(this, countDownBar);
         inputPanel = new InputPanel(this);
         bottomPanel = new BottomPanel();
@@ -329,7 +329,7 @@ public class DrawingClient extends JFrame {
                                 chatingListPanel.addMessage("게임이 시작되었습니다.");
                                 break;
                             case SketchingData.ROUND_START:
-                                countDownBar.start();
+                                countDownBar.start(); // 라운드 시작 시 카운트다운 시작
                                 // 제시어
                                 String word = data.getMessage();
                                 // 화가
@@ -357,8 +357,8 @@ public class DrawingClient extends JFrame {
                                 updateUserPanel(userIdList, userscoreList);
                                 break;
                             case SketchingData.GAME_OVER:
+                                countDownBar.stop(); // 게임 종료 시 카운트다운 멈춤
                                 drawPanel.clear();
-
                                 chatingListPanel.addMessage(data.getUserID() + "님이 50점을 달성하여 게임을 종료합니다.");
 
                                 Vector<String> useridList = data.getuserIDList();
