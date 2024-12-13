@@ -8,8 +8,6 @@ public class CountDownBar extends JPanel {
     private Timer timer; // 타이머 객체
     private int barWidth; // 바의 너비
     private int barHeight; // 바의 높이
-
-    private ImageIcon pointerIcon; // 헤더 포인터 이미지 아이콘 (붓 이미지)
     private Image pointerImage; // 헤더 포인터 이미지
 
     public CountDownBar(int duration) {
@@ -18,11 +16,9 @@ public class CountDownBar extends JPanel {
         this.barWidth = 350;
         this.barHeight = 50;
 
-        this.pointerIcon = new ImageIcon("images/boogi.png"); // 붓 이미지 경로 설정
-        this.pointerImage = pointerIcon.getImage();
-
+        ImageIcon pointerIcon = new ImageIcon("images/boogi.png"); // 붓 이미지 경로 설정
+        pointerImage = pointerIcon.getImage();
         pointerImage = pointerImage.getScaledInstance(50, 50, Image.SCALE_SMOOTH); // 이미지 크기 조절
-        pointerIcon = new ImageIcon(pointerImage); // 다시 ImageIcon으로 변환
 
 
         setPreferredSize(new Dimension(barWidth, barHeight));
