@@ -53,7 +53,29 @@ public class DrawingClient extends JFrame {
         setResizable(false);
         setTitle("Hansung Sketch " + roomName);
         setSize(1400, 800);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        //DO_NOTHING_ON_CLOSE로,프레임 윈도우창 X 버튼 클릭시 아무동작 안하게 설정 & 커스텀 동작 설정
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+        // 윈도우 이벤트 리스너 추가
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) { // 창 닫기 버튼 클릭 시
+                // 창 닫기 확인 다이얼로그 표시 등의 작업 수행
+                int result = JOptionPane.showConfirmDialog(
+                        DrawingClient.this,
+                        "한성스케치를 종료하시겠습니까?",
+                        "게임 종료",
+                        JOptionPane.YES_NO_OPTION
+                );
+
+                if (result == JOptionPane.YES_OPTION) {
+                    disconnect(); // 연결 종료
+                    System.exit(0); // 프로그램 종료 -> 자원 해제
+                }
+            }
+        });
 
         JPanel centerPanel = new JPanel(new BorderLayout());
         drawPanel = new DrawPanel();
@@ -387,14 +409,25 @@ public class DrawingClient extends JFrame {
     void disconnect() {
         send(new SketchingData(SketchingData.MODE_LOGOUT, userId));
         try {
-            socket.close();  //???? 왜 무한출력되지?
-            System.exit(-1); //????
+            if (out != null) {
+                out.close();
+            }
+            if (in != null) {
+                in.close();
+            }
+            if (socket != null) {
+                socket.close();
+            }
+
+            //System.exit(-1); // 프로그램 종료
         } catch (IOException e) {
             System.err.println("클라이언트 닫기 오류> " + e.getMessage());
-            System.exit(-1);
+            // System.exit(-1);
+        } finally {
+            dispose(); // DrawingClient 프레임창 닫기 & 자원해제
         }
-        //다시 로그인 화면으로 돌아가기. ClientMain으로 전환.//ClientMain.setVisible(true);
     }
+
 
     //    public void sendMessage(String message) {
 //        String fullMessage = userId + ": " + message;

@@ -37,7 +37,21 @@ public class DrawingSetting extends JPanel {
 
         logoutBtn = new JButton("로그아웃");
         logoutBtn.addActionListener(e -> {
-            drawingClient.disconnect();
+            // 창 닫기 확인 다이얼로그 표시 등의 작업 수행
+            int result = JOptionPane.showConfirmDialog(
+                    drawingClient,
+                    "로그아웃 하시겠습니까?",
+                    "로그아웃",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (result == JOptionPane.YES_OPTION) {
+
+
+                drawingClient.disconnect();// 연결 종료
+                //System.exit(0); // 프로그램 종료 -> 자원 해제
+                new ClientMain(); // 로그인 화면으로 돌아가기
+            }
         });
 
         //countDownBar.setPreferredSize(new Dimension(300, 50)); // 예시: 너비 100, 높이 70으로 고정
