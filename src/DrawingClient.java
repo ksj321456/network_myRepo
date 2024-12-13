@@ -35,6 +35,7 @@ public class DrawingClient extends JFrame {
 
     // 현재 그림을 그릴 수 있는 상태인지
     private boolean canDrawing = false;
+    private CountDownBar countDownBar;
 
     public DrawingClient(Socket socket, ObjectOutputStream out, ObjectInputStream in, String roomName, String userId, String serverAddress, int serverPort) {
         this.socket = socket;
@@ -59,9 +60,11 @@ public class DrawingClient extends JFrame {
         leftUserPanel = new LeftUserPanel();
         rightUserPanel = new RightUserPanel();
         chatingListPanel = new ChatingListPanel();
-        drawingSetting = new DrawingSetting(this);
+        countDownBar = new CountDownBar(60); // 60초 카운트다운바 생성
+        drawingSetting = new DrawingSetting(this, countDownBar);
         inputPanel = new InputPanel(this);
         bottomPanel = new BottomPanel();
+
 
         drawingSetting.getEraser().addActionListener(new ActionListener() {
             @Override
@@ -108,6 +111,8 @@ public class DrawingClient extends JFrame {
         drawPanel.setEnabled(false);
 
         setVisible(true);
+
+
     }
 
     // 그리기를 실행하는 Thread
@@ -302,6 +307,7 @@ public class DrawingClient extends JFrame {
                                 chatingListPanel.addMessage("게임이 시작되었습니다.");
                                 break;
                             case SketchingData.ROUND_START:
+                                countDownBar.start();
                                 // 제시어
                                 String word = data.getMessage();
                                 // 화가
