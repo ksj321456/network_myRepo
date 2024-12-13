@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 
 public class CountDownBar extends JPanel {
     private int timeLeft; // 남은 시간 (초)
+    private int duration; // 총 시간 (초)
     private Timer timer; // 타이머 객체
     private int barWidth; // 바의 너비
     private int barHeight; // 바의 높이
@@ -16,7 +17,7 @@ public class CountDownBar extends JPanel {
 
     public CountDownBar(int duration) {
         this.timeLeft = duration;
-
+        this.duration = duration;
         this.barWidth = 350;
         this.barHeight = 50;
 
@@ -54,8 +55,14 @@ public class CountDownBar extends JPanel {
     }
 
     public void start() {
-        timeLeft = 60; // 타이머 카운트다운 시간 설정 & 라운드 시작 시 시간 초기화
+        timeLeft = duration; // 새로운 라운드 시작 시 다시 설정된 시간으로 초기화해서 카운트다운바 처음부터시작.
         timer.start();
+    }
+
+    // 카운트다운 멈춤
+    public void stop() {
+        timer.stop();
+        stopWarning();
     }
 
     private void startWarning() {
@@ -86,7 +93,7 @@ public class CountDownBar extends JPanel {
 
         // 카운트다운 바 디폴트 색상
         g.setColor(Color.CYAN);
-        int currentWidth = (int) ((double) timeLeft / 60 * barWidth);
+        int currentWidth = (int) ((double) timeLeft / duration * barWidth);
         g.fillRect(0, 0, currentWidth, barHeight);
 
         // 카운트다운 진행상황 색상
