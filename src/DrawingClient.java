@@ -356,6 +356,18 @@ public class DrawingClient extends JFrame {
 
                                 updateUserPanel(userIdList, userscoreList);
                                 break;
+                            case SketchingData.GAME_OVER:
+                                drawPanel.clear();
+
+                                chatingListPanel.addMessage(data.getUserID() + "님이 50점을 달성하여 게임을 종료합니다.");
+
+                                Vector<String> useridList = data.getuserIDList();
+                                Vector<Integer> userscorelist = data.getuserScoreList();
+                                updateUserPanel(useridList, userscorelist);
+
+                                // 게임을 종료 후 다시 그림을 못 그리게 설정
+                                canDrawing = false;
+                                break;
                         }
                     }
 //                    else if (data.getMode() == SketchingData.MODE_LOGOUT) {

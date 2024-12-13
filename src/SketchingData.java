@@ -47,6 +47,7 @@ public class SketchingData implements Serializable {
     }
 
     // 문제를 맞췄을 경우의 프로토콜
+    // 우승자로 인해 게임이 종료될 때의 프로토콜
     public SketchingData(int mode, String roomName, String userID, Vector<String> userIDList, Vector<Integer> userScoreList) {
         this.mode = mode;
         this.roomName = roomName;

@@ -21,9 +21,6 @@ public class DrawingServer extends JFrame {
     private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
 
-    private Vector<String> roomNamesList = new Vector<>();
-    private Vector<String> ownerNamesList = new Vector<>();
-
     //각 게임방별로 유저들을 관리하는 맵(특정 게임방에 있는 클라이언트들을 저장하는 hashMap)
     private Map<String, Map<String, Integer>> rooms = new HashMap<>();
 
@@ -262,7 +259,31 @@ public class DrawingServer extends JFrame {
                                 }
                                 // 정답을 맞춘 플레이어가 50점을 달성하였을 경우
                                 else {
+                                    printDisplay(data.getRoomName() + " 방에서 우승자가 나왔습니다. ** " + data.getUserID() + " **");
 
+                                    String winner = data.getUserID();
+
+                                    // 기존에 접속한 플레이어들의 준비 상태 해제
+                                    roomReadyCnt.put(data.getRoomName(), 0);
+
+                                    // 플레이어들의 점수 0점으로 업데이트
+                                    Map<String, Integer> map = rooms.get(data.getRoomName());
+                                    Vector<String> userIdList = new Vector<>();
+                                    Vector<Integer> userscoreList = new Vector<>();
+                                    for (String userId : map.keySet()) {
+                                        map.put(userId, 0);
+                                    }
+
+                                    // 업데이트된 Vector를 클라이언트에 전송
+
+                                    for (String userId : map.keySet()) {
+                                        userIdList.add(userId);
+                                        userscoreList.add(map.get(userId));
+                                    }
+
+                                    broadcast(new SketchingData(SketchingData.GAME_OVER, data.getRoomName(), winner, userIdList, userscoreList));
+
+                                    printDisplay(data.getUserID() + " 방의 게임을 종료합니다.");
                                 }
                             }
                         }
