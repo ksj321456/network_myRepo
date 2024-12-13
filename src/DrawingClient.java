@@ -367,6 +367,8 @@ public class DrawingClient extends JFrame {
 
                                 // 게임을 종료 후 다시 그림을 못 그리게 설정
                                 canDrawing = false;
+                                // 준비완료 false
+                                isReady = false;
                                 break;
                         }
                     }
