@@ -1,3 +1,9 @@
+package Server;
+
+import etc.Line;
+import etc.SketchingData;
+import etc.WordList;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -254,7 +260,7 @@ public class DrawingServer extends JFrame {
                                     broadcast(new SketchingData(SketchingData.ROUND_START, data.getRoomName(), word, painter));
                                     // 해당 게임 방은 게임 중으로 설정
                                     isGameMap.put(data.getRoomName(), true);
-                                    wordMap.put(data.getRoomName(),word);
+                                    wordMap.put(data.getRoomName(), word);
                                     printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.");
                                 }
                                 // 정답을 맞춘 플레이어가 50점을 달성하였을 경우
@@ -312,7 +318,7 @@ public class DrawingServer extends JFrame {
                     }
                     // 방에 입장할 때
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
-                        // 전달받은 roomName 속성을 통해 방을 찾고 해당 DrawingClient 불러오기
+                        // 전달받은 roomName 속성을 통해 방을 찾고 해당 Client.DrawingClient 불러오기
                         // 입장하고자 하는 방의 이름을 받아 value인 Map 업데이트 한 후 put
 
                         // 방의 이름을 받아서 Map 객체를 꺼내와 put으로 업데이트
@@ -323,8 +329,7 @@ public class DrawingServer extends JFrame {
                                 if (rooms.get(data.getRoomName()).size() <= 8) {
                                     broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), true));
                                     sendPlayerList();
-                                }
-                                else {
+                                } else {
                                     broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), false));
                                 }
                             }
@@ -374,7 +379,7 @@ public class DrawingServer extends JFrame {
                                 broadcast(new SketchingData(SketchingData.ROUND_START, data.getRoomName(), word, painter));
                                 // 해당 게임 방은 게임 중으로 설정
                                 isGameMap.put(data.getRoomName(), true);
-                                wordMap.put(data.getRoomName(),word);
+                                wordMap.put(data.getRoomName(), word);
                                 printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.");
                             }
                             // 그렇지 않다면 단순히 클라이언트에 준비완료 사실 전송
@@ -425,7 +430,7 @@ public class DrawingServer extends JFrame {
             } finally {
                 try {
 /*                    // 클라이언트 소켓이 종료될 때 MODE_LOGOUT 메시지 처리
-                    SketchingData logoutData = new SketchingData(SketchingData.MODE_LOGOUT, data.getUserID(), clientSocket.getInetAddress().toString());
+                    etc.SketchingData logoutData = new etc.SketchingData(etc.SketchingData.MODE_LOGOUT, data.getUserID(), clientSocket.getInetAddress().toString());
                     broadcastOthers(logoutData, this);*/
                     clientSocket.close();
                 } catch (IOException e) {

@@ -1,3 +1,9 @@
+package Client;
+
+import etc.ChatType;
+import etc.Line;
+import etc.SketchingData;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -83,9 +89,9 @@ public class DrawingClient extends JFrame {
         rightUserPanel = new RightUserPanel();
         chatingListPanel = new ChatingListPanel();
         countDownBar = new CountDownBar(30); // 카운트다운바 생성(인자값: 카운트다운 시간)
-        drawingSetting = new DrawingSetting(this, countDownBar);
+        drawingSetting = new DrawingSetting(countDownBar);
         inputPanel = new InputPanel(this);
-        bottomPanel = new BottomPanel();
+        bottomPanel = new BottomPanel(this);
 
 
         drawingSetting.getEraser().addActionListener(new ActionListener() {
@@ -155,13 +161,13 @@ public class DrawingClient extends JFrame {
                     Color selectedColor = isEraserOn ? Color.WHITE : drawingSetting.getSelectedColor();
                     float selectedWidth = isEraserOn ? 20 : drawingSetting.getSelectedLineWidth();
 
-                    // Line 객체 생성 및 색깔, 굵기 설정
+                    // etc.Line 객체 생성 및 색깔, 굵기 설정
                     Line line = new Line(lastPoint.x, lastPoint.y, e.getX(), e.getY(), selectedColor, selectedWidth);
 
-                    // SketchingData 객체 생성
+                    // etc.SketchingData 객체 생성
                     SketchingData sketchingData = new SketchingData(SketchingData.MODE_LINE, line, roomName);
 
-                    // 서버에 Line 객체 전송
+                    // 서버에 etc.Line 객체 전송
                     try {
                         out.writeObject(sketchingData);
                         out.flush();
@@ -379,7 +385,7 @@ public class DrawingClient extends JFrame {
                                 break;
                         }
                     }
-//                    else if (data.getMode() == SketchingData.MODE_LOGOUT) {
+//                    else if (data.getMode() == etc.SketchingData.MODE_LOGOUT) {
 //                        removeUser(data.getUserID());
 //                    }
                 } catch (IOException e) {
@@ -413,7 +419,7 @@ public class DrawingClient extends JFrame {
     }
 
 
-    void disconnect() {
+    public void disconnect() {
         send(new SketchingData(SketchingData.MODE_LOGOUT, userId));
         try {
             if (out != null) {
@@ -431,14 +437,14 @@ public class DrawingClient extends JFrame {
             System.err.println("클라이언트 닫기 오류> " + e.getMessage());
             // System.exit(-1);
         } finally {
-            dispose(); // DrawingClient 프레임창 닫기 & 자원해제
+            dispose(); // Client.DrawingClient 프레임창 닫기 & 자원해제
         }
     }
 
 
     //    public void sendMessage(String message) {
 //        String fullMessage = userId + ": " + message;
-//        SketchingData chatData = new SketchingData(SketchingData.MODE_CHAT, userId, fullMessage);
+//        etc.SketchingData chatData = new etc.SketchingData(etc.SketchingData.MODE_CHAT, userId, fullMessage);
 //        chatingListPanel.addMessage("나: " + message);
 //
 //        try {
@@ -472,7 +478,7 @@ public class DrawingClient extends JFrame {
 //
 //    public static void main(String[] args) {
 //        String userId = JOptionPane.showInputDialog("사용자 ID를 입력하세요:"); // 다이얼로그로 사용자 ID 입력
-//        DrawingClient drawingClient = new DrawingClient(userId);
+//        Client.DrawingClient drawingClient = new Client.DrawingClient(userId);
 //        //drawingClient.connectToServer();
 //    }
 }

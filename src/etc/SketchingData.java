@@ -1,6 +1,6 @@
+package etc;
+
 import java.io.Serializable;
-import java.net.Socket;
-import java.util.List;
 import java.util.Vector;
 
 public class SketchingData implements Serializable {
@@ -114,6 +114,7 @@ public class SketchingData implements Serializable {
         this.userID = userID;
         this.isReady = isReady;
     }
+
     // 서버 -> 클라이언트로 준비 완료 및 취소 응답을 보낼 때
     public SketchingData(int mode, String roomName, String userID, boolean isReady, boolean isSuccess) {
         this.mode = mode;

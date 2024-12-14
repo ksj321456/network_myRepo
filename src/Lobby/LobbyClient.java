@@ -1,3 +1,8 @@
+package Lobby;
+
+import Client.DrawingClient;
+import etc.SketchingData;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;

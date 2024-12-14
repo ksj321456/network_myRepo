@@ -1,3 +1,7 @@
+package Main;
+
+import Lobby.LobbyClient;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;

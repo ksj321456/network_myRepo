@@ -1,3 +1,7 @@
+package Client;
+
+import etc.Line;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;

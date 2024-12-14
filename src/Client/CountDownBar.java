@@ -1,3 +1,5 @@
+package Client;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -56,6 +58,7 @@ public class CountDownBar extends JPanel {
 
     public void start() {
         timeLeft = duration; // 새로운 라운드 시작 시 다시 설정된 시간으로 초기화해서 카운트다운바 처음부터시작.
+        stopWarning(); // isWarning과 warningTimer를 초기화하지 않으면, 이전 라운드에서 경고 상태가 활성화된 상태로 다음 라운드가 시작되는 문제발생.
         timer.start();
     }
 
