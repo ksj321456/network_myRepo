@@ -34,7 +34,18 @@ public class ChatingListPanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    public void addMessage(String message) {
+    public void addMessage(String message, ChatType type) {
+
+        switch (type) { // 메시지 타입에 따라 메시지 내용을 다르게 구성
+            case MY_CHAT: // 본인의 채팅
+                message = "나: " + message;
+                break;
+            case OTHERS_CHAT: // 다른 사용자의 채팅
+                break;
+            case SYSTEM_MESSAGE: // 시스템 메시지
+                message = "[시스템] " + message;
+                break;
+        }
         chatModel.addElement(message);
 
         // <채팅들이 채팅리스트의 크기를 넘어서면 채팅리스트의 스크롤을 맨 아래로 이동시키고자 추가해준 구문>
@@ -66,6 +77,8 @@ public class ChatingListPanel extends JPanel {
             // 각 채팅 메시지에 색을 입히는 로직
             if (message.startsWith("나:")) {
                 component.setBackground(Color.CYAN); // 본인이 입력한 메시지의 색상 설정
+            } else if (message.startsWith("[시스템]")) {
+                component.setBackground(Color.WHITE); // 시스템 메시지의 색상 설정
             } else {
                 component.setBackground(Color.LIGHT_GRAY); // 다른 사용자가 입력한 메시지의 색상 설정
             }

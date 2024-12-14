@@ -249,7 +249,7 @@ public class DrawingClient extends JFrame {
                 //addUser(userId); // 클라이언트가 직접 추가하는게 아닌, 서버에서 현재 접속자들 받아오는 방식으로 변경.
 
             } catch (IOException e) {
-                chatingListPanel.addMessage("서버에 연결할 수 없습니다: " + e.getMessage());
+                chatingListPanel.addMessage("서버에 연결할 수 없습니다: " + e.getMessage(), ChatType.SYSTEM_MESSAGE);
             }
         }).start();
     }
@@ -272,7 +272,7 @@ public class DrawingClient extends JFrame {
 
                     if (data == null) {// 서버측에서 소켓연결을 종료하여 스트림이 닫힌경우.
                         disconnect();
-                        chatingListPanel.addMessage("서버 연결 끊김");
+                        chatingListPanel.addMessage("서버 연결 끊김", ChatType.SYSTEM_MESSAGE);
                         return;
                     }
 
@@ -281,9 +281,9 @@ public class DrawingClient extends JFrame {
                         switch (data.getMode()) { // 수신된 메시지의 모드값에 따라 다른 처리.
                             case SketchingData.MODE_CHAT: // 채팅모드라면, 서버로부터 전달받은 id 와 문자열 메시지를 화면에 출력.
                                 if (data.getUserID().equals(userId)) {
-                                    chatingListPanel.addMessage("나: " + data.getMessage());
+                                    chatingListPanel.addMessage(data.getMessage(), ChatType.MY_CHAT);
                                 } else {
-                                    chatingListPanel.addMessage(data.getUserID() + ": " + data.getMessage());
+                                    chatingListPanel.addMessage(data.getUserID() + ": " + data.getMessage(), ChatType.OTHERS_CHAT);
                                 }
                                 System.out.println(data.getRoomName() + "에서 채팅");
                                 break;
@@ -313,21 +313,21 @@ public class DrawingClient extends JFrame {
                                     boolean isReady = data.isReady();
 
                                     if (isReady) {
-                                        chatingListPanel.addMessage(userId + "님이 준비완료하였습니다.");
+                                        chatingListPanel.addMessage(userId + "님이 준비완료하였습니다.", ChatType.SYSTEM_MESSAGE);
                                     } else {
-                                        chatingListPanel.addMessage(userId + "님이 준비를 취소하였습니다.");
+                                        chatingListPanel.addMessage(userId + "님이 준비를 취소하였습니다.", ChatType.SYSTEM_MESSAGE);
                                     }
                                     break;
                                 }
                                 // 준비완료 및 취소가 실패했을 때 ex) 혼자 방에 있는데 준비완료 하는 경우
                                 else {
-                                    chatingListPanel.addMessage("2인 이상 있을 때만 준비완료 가능합니다.");
+                                    chatingListPanel.addMessage("2인 이상 있을 때만 준비완료 가능합니다.", ChatType.SYSTEM_MESSAGE);
                                     isReady = false;
                                     break;
                                 }
                             case SketchingData.GAME_START:
                                 chatingListPanel.setAfterStartFont(); // 게임 시작 후 제시어전용 폰트로 변경
-                                chatingListPanel.addMessage("게임이 시작되었습니다.");
+                                chatingListPanel.addMessage("게임이 시작되었습니다.", ChatType.SYSTEM_MESSAGE);
                                 break;
 
                             case SketchingData.ROUND_START:
@@ -336,7 +336,7 @@ public class DrawingClient extends JFrame {
                                 String word = data.getMessage();
                                 // 화가
                                 String painter = data.getRoomName();
-                                chatingListPanel.addMessage(painter + "님이 화가입니다.");
+                                chatingListPanel.addMessage(painter + "님이 화가입니다.", ChatType.SYSTEM_MESSAGE);
 
                                 // 화가만 그림을 그릴 수 있음, 화가에게만 제시어 표시
                                 if (userId.equals(painter)) {
@@ -353,7 +353,7 @@ public class DrawingClient extends JFrame {
                                 break;
                             // 정답을 맞춘 사람이 나타났을 때
                             case SketchingData.MODE_CORRECT:
-                                chatingListPanel.addMessage(data.getUserID() + "님이 정답을 맞췄습니다.");
+                                chatingListPanel.addMessage(data.getUserID() + "님이 정답을 맞췄습니다.", ChatType.SYSTEM_MESSAGE);
                                 drawPanel.clear();
 
                                 Vector<String> userIdList = data.getuserIDList();
@@ -364,7 +364,7 @@ public class DrawingClient extends JFrame {
                             case SketchingData.GAME_OVER:
                                 countDownBar.stop(); // 게임 종료 시 카운트다운 멈춤
                                 drawPanel.clear();
-                                chatingListPanel.addMessage(data.getUserID() + "님이 50점을 달성하여 게임을 종료합니다.");
+                                chatingListPanel.addMessage(data.getUserID() + "님이 50점을 달성하여 게임을 종료합니다.", ChatType.SYSTEM_MESSAGE);
 
                                 Vector<String> useridList = data.getuserIDList();
                                 Vector<Integer> userscorelist = data.getuserScoreList();
@@ -381,9 +381,9 @@ public class DrawingClient extends JFrame {
 //                        removeUser(data.getUserID());
 //                    }
                 } catch (IOException e) {
-                    chatingListPanel.addMessage("연결을 종료했습니다.");
+                    chatingListPanel.addMessage("연결을 종료했습니다.", ChatType.SYSTEM_MESSAGE);
                 } catch (ClassNotFoundException e) {
-                    chatingListPanel.addMessage("잘못된 객체가 전달되었습니다.");
+                    chatingListPanel.addMessage("잘못된 객체가 전달되었습니다.", ChatType.SYSTEM_MESSAGE);
                     throw new RuntimeException(e);
 
                 }
