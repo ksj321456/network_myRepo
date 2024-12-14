@@ -43,6 +43,8 @@ public class DrawingClient extends JFrame {
     private boolean canDrawing = false;
     private CountDownBar countDownBar;
 
+    private String prevPainter = ""; // 이전 라운드의 화가 식별을 위한 변수
+
     public DrawingClient(Socket socket, ObjectOutputStream out, ObjectInputStream in, String roomName, String userId, String serverAddress, int serverPort) {
         this.socket = socket;
         this.out = out;
@@ -59,6 +61,7 @@ public class DrawingClient extends JFrame {
         setResizable(false);
         setTitle("Hansung Sketch " + roomName);
         setSize(1400, 800);
+        setLocationRelativeTo(null); // 화면 중앙에 프레임 띄우기
         //setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //DO_NOTHING_ON_CLOSE로,프레임 윈도우창 X 버튼 클릭시 아무동작 안하게 설정 & 커스텀 동작 설정
@@ -347,17 +350,24 @@ public class DrawingClient extends JFrame {
                                 // 화가만 그림을 그릴 수 있음, 화가에게만 제시어 표시
                                 if (userId.equals(painter)) {
                                     drawPanel.setEnabled(true);
-                                    inputPanel.getT_input().setEnabled(false);
-                                    inputPanel.getB_send().setEnabled(false);
                                     chatingListPanel.setWord("제시어: ", word);
                                     canDrawing = true;
+                                    if (!userId.equals(prevPainter)) { // 중복 호출 방지: 이전 라운드의 화가가 아닌 경우
+                                        inputPanel.getT_input().setEnabled(false); // 화가는 채팅을 못함
+                                        inputPanel.getB_send().setEnabled(false);
+                                    }
                                 } else {// 화가가 아닌 사람들은 제시어 ???로 표시
+                                    if (userId.equals(prevPainter)) { // 중복 호출 방지: 이전 라운드의 화가였던 경우
+                                        inputPanel.getT_input().setEnabled(true); // 화가가 아닌 사람은 채팅 가능
+                                        inputPanel.getB_send().setEnabled(true);
+                                    }
                                     StringBuilder maskedWord = new StringBuilder();
                                     for (int i = 0; i < word.length(); i++) {
                                         maskedWord.append("?");
                                     }
                                     chatingListPanel.setWord("제시어: ", maskedWord.toString());
                                 }
+                                prevPainter = painter; // 현재 라운드의 화가 정보 저장
                                 break;
                             // 정답을 맞춘 사람이 나타났을 때
                             case SketchingData.MODE_CORRECT:
