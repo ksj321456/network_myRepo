@@ -29,7 +29,7 @@ public class LobbyClient extends JFrame {
         this.portNumber = portNumber;
         setTitle("Hansung Sketch Client");
         setSize(400, 600);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null); // 화면 중앙에 프레임 띄우기
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // 서버와 통신할 소켓과 스트림 생성

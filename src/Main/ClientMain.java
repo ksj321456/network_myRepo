@@ -22,14 +22,15 @@ public class ClientMain extends JFrame {
     public ClientMain() {
         setTitle("Hansung Sketch");
 
-        /* 프레임의 위치를 화면 중앙으로 설정하는 절차들 */
+        /* //프레임의 위치를 화면 중앙으로 설정하는 절차들
         // 현재 사용자의 모니터 화면의 크기를 가져옴
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         // 화면의 가로세로 중앙 계산
         int centerX = (int) (screenSize.getWidth() - 550) / 2;
         int centerY = (int) (screenSize.getHeight() - 600) / 2;
-        setBounds(centerX, centerY, 520, 500);
-        /*-------------------------------------*/
+        setBounds(centerX, centerY, 520, 500);*/
+        setSize(520, 500);
+        setLocationRelativeTo(null); // 화면 중앙에 프레임 띄우기
         buildGUI();
         setVisible(true);
         setResizable(false);
