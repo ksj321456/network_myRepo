@@ -1,6 +1,7 @@
+package Buttons;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,21 +9,15 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class BottomPanel extends JPanel {
+public class ScreenShotBtn extends TemplateButton {
 
-    public BottomPanel() {
-        setLayout(new FlowLayout(FlowLayout.CENTER));
+    public ScreenShotBtn() {
+        super("images/camera.png", new Color(215, 179, 246));
+    }
 
-        ImageIcon cameraIcon = new ImageIcon("images/camera.png");
-        Image cameraImage = cameraIcon.getImage(); // ImageIcon을 Image로 변환
-        Image scaledCameraImage = cameraImage.getScaledInstance(50, 50, Image.SCALE_SMOOTH); // 이미지 크기 조절
-        ImageIcon scaledCameraIcon = new ImageIcon(scaledCameraImage); // 다시 ImageIcon으로 변환
-
-        JButton screenShotBtn = new JButton(scaledCameraIcon);
-        screenShotBtn.setBackground(new Color(215, 179, 246));
-        screenShotBtn.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null)); // 테두리 에칭 효과. 버튼이 입체적으로 보이도록.
-        screenShotBtn.addActionListener(new ActionListener() {
-
+    @Override
+    protected ActionListener getActionListener() {
+        return new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Frame frame = new Frame("한성 스케치: 스크린샷 저장");
@@ -32,8 +27,9 @@ public class BottomPanel extends JPanel {
                 String path = fileDialog.getDirectory(); // 사용자가 선택한 스크린샷이 저장될 디렉터리 경로
                 String fileName = fileDialog.getFile(); // 사용자가 입력한 스크린샷 파일 이름
                 String fileExtension = "png"; // 스크린샷 파일 확장자
-                if (path == null || fileName == null)
+                if (path == null || fileName == null) {
                     return;
+                }
 
                 try {
                     Robot screenShotRobot = new Robot(); // 화면 캡처 작업 자동화를 위한 Robot 객체 생성
@@ -65,9 +61,6 @@ public class BottomPanel extends JPanel {
                     ex.printStackTrace();
                 }
             }
-        });
-
-        add(screenShotBtn); // 게임 스크린샷 버튼 추가
+        };
     }
-
 }

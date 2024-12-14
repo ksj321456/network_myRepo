@@ -1,3 +1,7 @@
+package Client;
+
+import etc.ChatType;
+
 import javax.swing.*;
 import java.awt.*;
 
