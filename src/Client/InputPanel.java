@@ -36,4 +36,12 @@ public class InputPanel extends JPanel {
             t_input.setText("");
         }
     }
+
+    public JTextField getT_input() {
+        return t_input;
+    }
+
+    public JButton getB_send() {
+        return b_send;
+    }
 }

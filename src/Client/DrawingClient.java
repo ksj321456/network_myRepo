@@ -347,6 +347,8 @@ public class DrawingClient extends JFrame {
                                 // 화가만 그림을 그릴 수 있음, 화가에게만 제시어 표시
                                 if (userId.equals(painter)) {
                                     drawPanel.setEnabled(true);
+                                    inputPanel.getT_input().setEnabled(false);
+                                    inputPanel.getB_send().setEnabled(false);
                                     chatingListPanel.setWord("제시어: ", word);
                                     canDrawing = true;
                                 } else {// 화가가 아닌 사람들은 제시어 ???로 표시
