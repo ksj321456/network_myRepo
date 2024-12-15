@@ -41,22 +41,12 @@ public class DrawingServer extends JFrame {
 
     public DrawingServer() {
         setTitle("Hansung Sketch Server");
-        /*
-         *//* 프레임의 위치를 화면 중앙으로 설정하는 절차들 *//*
-        // 현재 사용자의 모니터 화면의 크기를 가져옴
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        // 화면의 가로세로 중앙 계산
-        int centerX = (int) (screenSize.getWidth() - 550) / 2;
-        int centerY = (int) (screenSize.getHeight() - 600) / 2;*/
-        //setBounds(centerX, centerY, 400, 600);
-
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //setSize(400, 600);
+        //setLocationRelativeTo(null); // 화면 중앙에 프레임 띄우기
         setBounds(0, 0, 400, 600);
-        /*-------------------------------------*/
-
         buildGUI();
         setVisible(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
     }
 
     private void buildGUI() {
