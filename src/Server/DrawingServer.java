@@ -5,8 +5,8 @@ import etc.SketchingData;
 import etc.WordList;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -14,8 +14,8 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class DrawingServer extends JFrame {
     private static final int PORT = 12345;
@@ -41,14 +41,16 @@ public class DrawingServer extends JFrame {
 
     public DrawingServer() {
         setTitle("Hansung Sketch Server");
-
-        /* 프레임의 위치를 화면 중앙으로 설정하는 절차들 */
+        /*
+         *//* 프레임의 위치를 화면 중앙으로 설정하는 절차들 *//*
         // 현재 사용자의 모니터 화면의 크기를 가져옴
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         // 화면의 가로세로 중앙 계산
         int centerX = (int) (screenSize.getWidth() - 550) / 2;
-        int centerY = (int) (screenSize.getHeight() - 600) / 2;
-        setBounds(centerX, centerY, 1000, 500);
+        int centerY = (int) (screenSize.getHeight() - 600) / 2;*/
+        //setBounds(centerX, centerY, 400, 600);
+
+        setBounds(0, 0, 400, 600);
         /*-------------------------------------*/
 
         buildGUI();
@@ -64,22 +66,23 @@ public class DrawingServer extends JFrame {
 
     // 디스플레이 패널
     private JPanel createDisplayPanel() {
-        JPanel dispalyPanel = new JPanel(new BorderLayout());
+        JPanel displayPanel = new JPanel(new BorderLayout());
         t_display = new JTextArea();
         JScrollPane scroll = new JScrollPane(t_display);
         t_display.setEditable(false);
-        dispalyPanel.add(scroll);
-
-        return dispalyPanel;
+        t_display.setFocusable(false);
+        displayPanel.add(scroll);
+        displayPanel.setBorder(new LineBorder(new Color(225, 215, 246), 10)); // 두께 10
+        return displayPanel;
     }
 
     // control 패널
     private JPanel createControlPanel() {
-        JPanel controlPanel = new JPanel(new GridLayout(1, 0));
+        JPanel controlPanel = new JPanel(new GridLayout(3, 1));
         b_connect = new JButton("서버 시작");
-        b_disconnect = new JButton("서버 종료");
+        b_disconnect = new JButton("서버 중단");
         b_disconnect.setEnabled(false);
-        b_exit = new JButton("종료");
+        b_exit = new JButton("서버 종료");
 
         b_connect.addActionListener(new ActionListener() {
 
