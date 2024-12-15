@@ -215,11 +215,14 @@ public class DrawingServer extends JFrame {
                         if (!rooms.isEmpty()) {
                             // 현재 있는 방의 이름들을 roomNames Vector에 저장
                             Vector<String> roomNames = new Vector<>();
+                            Vector<Integer> userCnt = new Vector<>();
                             for (String roomName : rooms.keySet()) {
                                 roomNames.add(roomName);
+                                // 해당 방에 클라이언트 수를 userCnt에 add
+                                userCnt.add(rooms.get(roomName).size());
                             }
-                            // 존재하는 방들의 이름 전송
-                            broadcast(new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNames, data.getUserID()));
+                            // 존재하는 방들의 이름과 해당 방에 접속해있는 클라이언트 수 전송
+                            broadcast(new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNames, data.getUserID(), userCnt));
                         }
 
                         continue;
@@ -268,29 +271,42 @@ public class DrawingServer extends JFrame {
                                 }
                                 // 정답을 맞춘 플레이어가 50점을 달성하였을 경우
                                 else {
-                                    printDisplay(data.getRoomName() + " 방에서 우승자가 나왔습니다. ** " + data.getUserID() + " **");
+                                    // 정답자에게 10점 추가
+                                    int newScore = rooms.get(data.getRoomName()).get(data.getUserID()) + 10;
+                                    Map<String, Integer> map = rooms.get(data.getRoomName());
+                                    map.put(data.getUserID(), newScore);
+                                    rooms.put(data.getRoomName(), map);
 
                                     String winner = data.getUserID();
+                                    printDisplay(data.getRoomName() + " 방에서 우승자가 나왔습니다. ** " + data.getUserID() + " **");
+
+                                    // 역정렬 맵
+                                    SortedMap<String, Integer> sortedMap = new TreeMap<>(Collections.reverseOrder());
+                                    for (String userId : map.keySet()) {
+                                        int score = map.get(userId);
+                                        String key = String.format("%d_%s", score, userId);
+                                        sortedMap.put(key, score);
+                                    }
 
                                     // 기존에 접속한 플레이어들의 준비 상태 해제
                                     roomReadyCnt.put(data.getRoomName(), 0);
 
                                     // 플레이어들의 점수 0점으로 업데이트
-                                    Map<String, Integer> map = rooms.get(data.getRoomName());
+                                    Map<String, Integer> map1 = rooms.get(data.getRoomName());
                                     Vector<String> userIdList = new Vector<>();
                                     Vector<Integer> userscoreList = new Vector<>();
-                                    for (String userId : map.keySet()) {
-                                        map.put(userId, 0);
+                                    for (String userId : map1.keySet()) {
+                                        map1.put(userId, 0);
                                     }
 
                                     // 업데이트된 Vector를 클라이언트에 전송
 
-                                    for (String userId : map.keySet()) {
+                                    for (String userId : map1.keySet()) {
                                         userIdList.add(userId);
                                         userscoreList.add(map.get(userId));
                                     }
 
-                                    broadcast(new SketchingData(SketchingData.GAME_OVER, data.getRoomName(), winner, userIdList, userscoreList));
+                                    broadcast(new SketchingData(SketchingData.GAME_OVER, data.getRoomName(), winner, userIdList, userscoreList, sortedMap));
 
                                     printDisplay(data.getUserID() + " 방의 게임을 종료합니다.");
                                 }
@@ -313,11 +329,15 @@ public class DrawingServer extends JFrame {
                             printDisplay("방 생성 (방 이름: " + data.getRoomName() + ") 방 갯수: " + rooms.size());
                             // 현재 게임 방은 게임 중이 아님
                             isGameMap.put(data.getRoomName(), false);
+                            // 방을 만든 직후이므로 해당 방의 준비 플레이어 수 = 0
+                            roomReadyCnt.put(data.getRoomName(), 0);
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), true));
                             sendPlayerList();
                         }
-                        // 방을 만든 직후이므로 해당 방의 준비 플레이어 수 = 0
-                        roomReadyCnt.put(data.getRoomName(), 0);
+                        else {
+                            printDisplay(data.getRoomName() + " 방 생성 실패 ");
+                            broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), false));
+                        }
                     }
                     // 방에 입장할 때
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
