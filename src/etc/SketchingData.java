@@ -1,6 +1,7 @@
 package etc;
 
 import java.io.Serializable;
+import java.util.SortedMap;
 import java.util.Vector;
 
 public class SketchingData implements Serializable {
@@ -34,11 +35,16 @@ public class SketchingData implements Serializable {
     private int portNumber;
     private Vector<String> roomList;
 
+    // 방에 접속해 있는 클라이언트들의 수
+    private Vector<Integer> userCnt;
+
     // 준비를 하는지 취소하는지
     private boolean isReady;
 
     // 준비완료 요청이 성공됐는지
     private boolean isSuccess;
+
+    private SortedMap<String, Integer> sortedMap;
 
     // 로그인, 로그아웃용 생성자 + 게임 시작을 알리는 프로토콜
     public SketchingData(int mode, String userID) {
@@ -47,13 +53,22 @@ public class SketchingData implements Serializable {
     }
 
     // 문제를 맞췄을 경우의 프로토콜
-    // 우승자로 인해 게임이 종료될 때의 프로토콜
     public SketchingData(int mode, String roomName, String userID, Vector<String> userIDList, Vector<Integer> userScoreList) {
         this.mode = mode;
         this.roomName = roomName;
         this.userID = userID;
         this.userIDList = userIDList;
         this.userScoreList = userScoreList;
+    }
+
+    // 우승자로 인해 게임이 종료될 때의 프로토콜
+    public SketchingData(int mode, String roomName, String userID, Vector<String> userIDList, Vector<Integer> userScoreList, SortedMap<String, Integer> sortedMap) {
+        this.mode = mode;
+        this.roomName = roomName;
+        this.userID = userID;
+        this.userIDList = userIDList;
+        this.userScoreList = userScoreList;
+        this.sortedMap = sortedMap;
     }
 
     // 스케치데이터 전송시 생성자
@@ -101,10 +116,11 @@ public class SketchingData implements Serializable {
     }
 
     // 현재 존재하는 방에 리스트들을 갖고올 때의 생성자
-    public SketchingData(int mode, Vector<String> roomList, String userID) {
+    public SketchingData(int mode, Vector<String> roomList, String userID, Vector<Integer> userCnt) {
         this.mode = mode;
         this.roomList = roomList;
         this.userID = userID;
+        this.userCnt = userCnt;
     }
 
     // 클라이언트 -> 서버로 준비 완료 및 취소 요청을 보낼 때
@@ -188,5 +204,13 @@ public class SketchingData implements Serializable {
 
     public boolean isSuccess() {
         return isSuccess;
+    }
+
+    public Vector<Integer> getUserCnt() {
+        return userCnt;
+    }
+
+    public SortedMap<String, Integer> getSortedMap() {
+        return sortedMap;
     }
 }

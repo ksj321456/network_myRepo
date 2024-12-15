@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Collections;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.Vector;
 
 public class DrawingClient extends JFrame {
@@ -300,6 +303,9 @@ public class DrawingClient extends JFrame {
                             case SketchingData.MODE_LINE:  // 그리기 모드를 받았을 때
                                 Line line = data.getLine();
                                 drawPanel.addLine(line.getX1(), line.getY1(), line.getX2(), line.getY2(), line.getColor(), line.getLineWidth());
+                                // 받은 좌표값을 하당 coordinates JPanel에 출력
+                                String showCoords = String.format("좌표값: (%d, %d)", line.getX2(), line.getY2());
+                                bottomPanel.getCoordinates().setText(showCoords);
                                 break;
 
                             case SketchingData.MODE_CLIENT_LIST:
@@ -386,7 +392,22 @@ public class DrawingClient extends JFrame {
 
                                 Vector<String> useridList = data.getuserIDList();
                                 Vector<Integer> userscorelist = data.getuserScoreList();
+                                System.out.println("userIdList의 크기: " + useridList.size());
                                 updateUserPanel(useridList, userscorelist);
+
+                                // 점수를 Key, userID를 value로 하는 SortedMap으로 역정렬 상태 관리
+                                SortedMap<String, Integer> sortedMap = data.getSortedMap();
+
+                                int idx = 1;
+                                StringBuilder sb = new StringBuilder();
+                                for (String key : sortedMap.keySet()) {
+                                    String[] parts = key.split("_");
+                                    int score = Integer.parseInt(parts[0]);
+                                    String userId = parts[1];
+                                    sb.append(String.format("%d등     %s      점수: %d\n", idx++, userId, score));
+                                }
+
+                                JOptionPane.showMessageDialog(null, sb.toString());
 
                                 // 게임을 종료 후 다시 그림을 못 그리게 설정
                                 canDrawing = false;
