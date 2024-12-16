@@ -80,31 +80,29 @@ public class LobbyClient extends JFrame {
 
                                 // 방 목록에 새로운 방 추가
                                 roomListModel.addElement(roomName);
+
                                 //how to stop the thread ?
 
-
                                 dispose();
-                                receiveThread = null;
 
                                 new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
                                 System.out.println("새로운 방 추가됨: " + roomName);
+                                receiveThread = null;
                             }
 
                         }
                     } else if (data.getMode() == SketchingData.SHOW_ROOM_LIST) {
-                        if (userName.equals(data.getUserID())) {
-                            Vector<String> roomList = data.getRoomList();
-                            Vector<Integer> userCnt = data.getUserCnt();
-                            roomListModel.clear(); // 기존 목록을 초기화
-                            for (int i = 0; i < roomList.size(); i++) {
-                                String room = roomList.get(i);
-                                int cnt = userCnt.get(i);
+                        Vector<String> roomList = data.getRoomList();
+                        Vector<Integer> userCnt = data.getUserCnt();
+                        roomListModel.clear(); // 기존 목록을 초기화
+                        for (int i = 0; i < roomList.size(); i++) {
+                            String room = roomList.get(i);
+                            int cnt = userCnt.get(i);
 
-                                String roomAndCnt = String.format("%s       %d/8", room, cnt);
-                                roomListModel.addElement(roomAndCnt);
-                            }
-                            System.out.println("방 목록 업데이트 완료");
+                            String roomAndCnt = String.format("%s       %d/8", room, cnt);
+                            roomListModel.addElement(roomAndCnt);
                         }
+                        System.out.println("방 목록 업데이트 완료");
                     }
                     // 방에 입장
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
@@ -112,8 +110,8 @@ public class LobbyClient extends JFrame {
                         if (data.isSuccess()) {
                             if (userName.equals(data.getOwnerName())) {
                                 dispose();
-                                receiveThread = null;
                                 new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
+                                receiveThread = null;
                             }
                         }
                         // 그렇지 않으면 입장 불가 -> 다이얼로그로 입장 불가 메세지 표시

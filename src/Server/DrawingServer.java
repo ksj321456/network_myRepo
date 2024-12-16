@@ -382,6 +382,18 @@ public class DrawingServer extends JFrame {
                             roomReadyCnt.put(data.getRoomName(), 0);
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), true));
                             sendPlayerList();
+
+                            // 방을 만든 후에, 로비에 있는 클라이언트들에게 방 목록 업데이트
+                            Vector<String> roomNames = new Vector<>();
+                            Vector<Integer> userCnt = new Vector<>();
+                            for (String roomName : rooms.keySet()) {
+                                roomNames.add(roomName);
+                                // 해당 방에 클라이언트 수를 userCnt에 add
+                                userCnt.add(rooms.get(roomName).size());
+                            }
+                            // 존재하는 방들의 이름과 해당 방에 접속해있는 클라이언트 수 전송
+                            System.out.println("로비 클라이언트에게 데이터 전송 방 개수: " + roomNames.size());
+                            broadcast(new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNames, data.getUserID(), userCnt));
                         } else {
                             printDisplay(data.getRoomName() + " 방 생성 실패 ", "");
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), false));
@@ -405,6 +417,17 @@ public class DrawingServer extends JFrame {
                                 }
                             }
                         }
+                        // 입장한 후에, 로비에 있는 클라이언트들에게 방 목록 업데이트
+                        Vector<String> roomNames = new Vector<>();
+                        Vector<Integer> userCnt = new Vector<>();
+                        for (String roomName : rooms.keySet()) {
+                            roomNames.add(roomName);
+                            // 해당 방에 클라이언트 수를 userCnt에 add
+                            userCnt.add(rooms.get(roomName).size());
+                        }
+                        // 존재하는 방들의 이름과 해당 방에 접속해있는 클라이언트 수 전송
+                        System.out.println("로비 클라이언트에게 데이터 전송 방 개수: " + roomNames.size());
+                        broadcast(new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNames, data.getUserID(), userCnt));
                     }
                     // 준비를 하거나 취소할 때의 로직
                     else if (data.getMode() == SketchingData.MODE_INDIVIDUAL_READY) {
