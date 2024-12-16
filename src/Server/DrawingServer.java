@@ -277,7 +277,9 @@ public class DrawingServer extends JFrame {
 
                         continue;
                     } else if (data.getMode() == SketchingData.MODE_LOGOUT) { // 로그아웃 메시지라면
-                        break; // 클라이언트측과의 연결을 해제
+                        int playerCnt = rooms.get(roomName).size() - 1;
+                        printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + playerCnt, roomName);
+                        break;
                     }                    //채팅 메시지를 받았을 때
                     else if (data.getMode() == SketchingData.MODE_CHAT) {
                         printDisplay("[채팅]" + userID + ": " + data.getMessage(), data.getRoomName());
@@ -553,7 +555,7 @@ public class DrawingServer extends JFrame {
                 //while문을 빠져나왔다는 것은 클라이언트와의 연결이 끊어졌다는 뜻.
                 clients.remove(this); // 연결이 끊은 클라이언트를 사용자벡터에서 제거. 현재 작업스레드를 벡터에서 제거.
                 sendPlayerList(); // 한 플레이어가 퇴장했으므로, 플레이어 리스트를 갱신하여 모든 클라이언트에게 전송.
-                //printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + rooms.get(roomName).size(), roomName);
+//                printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + rooms.get(roomName).size(), roomName);
             } catch (IOException e) {
                 clients.remove(this);
                 sendPlayerList(); // 한 플레이어가 퇴장했으므로, 플레이어 리스트를 갱신하여 모든 클라이언트에게 전송.
@@ -562,7 +564,7 @@ public class DrawingServer extends JFrame {
                 System.err.println("객체 전달 오류> " + e.getMessage());
             } finally {
                 try {
-                    printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + rooms.get(roomName).size(), roomName);
+//                    printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + rooms.get(roomName).size(), roomName);
 /*                    // 클라이언트 소켓이 종료될 때 MODE_LOGOUT 메시지 처리
                     etc.SketchingData logoutData = new etc.SketchingData(etc.SketchingData.MODE_LOGOUT, data.getUserID(), clientSocket.getInetAddress().toString());
                     broadcastOthers(logoutData, this);*/
