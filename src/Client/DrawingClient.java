@@ -11,9 +11,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.Collections;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.Vector;
 
 public class DrawingClient extends JFrame {
@@ -343,49 +341,90 @@ public class DrawingClient extends JFrame {
                             case SketchingData.GAME_START:
                                 chatingListPanel.setAfterStartFont(); // 게임 시작 후 제시어전용 폰트로 변경
                                 chatingListPanel.addMessage("게임이 시작되었습니다.", ChatType.SYSTEM_MESSAGE);
+
                                 break;
-
                             case SketchingData.ROUND_START:
-                                countDownBar.start(); // 라운드 시작 시 카운트다운 시작
-                                // 제시어
-                                String word = data.getMessage();
-                                // 화가
-                                String painter = data.getRoomName();
-                                chatingListPanel.addMessage(painter + "님이 화가입니다.", ChatType.SYSTEM_MESSAGE);
+                                // 새로운 JLabel 생성 및 이미지 설정
+                                JLabel imageLabel = new JLabel(new ImageIcon("images/areYouReady.png"));
+                                // JLabel 크기 설정 (이미지 크기와 동일하게)
+                                imageLabel.setSize(300, 300);
 
-                                // 화가만 그림을 그릴 수 있음, 화가에게만 제시어 표시
-                                if (userId.equals(painter)) {
-                                    drawPanel.setEnabled(true);
-                                    chatingListPanel.setWord("제시어: ", word);
-                                    canDrawing = true;
-                                    if (!userId.equals(prevPainter)) { // 중복 호출 방지: 이전 라운드의 화가가 아닌 경우
-                                        inputPanel.getT_input().setEnabled(false); // 화가는 채팅을 못함
-                                        inputPanel.getB_send().setEnabled(false);
+                                imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+                                int x = (drawPanel.getWidth() - imageLabel.getWidth()) / 2;
+                                int y = (drawPanel.getHeight() - imageLabel.getHeight()) / 2;
+                                imageLabel.setLocation(x, y); // 위치 설정
+                                drawPanel.add(imageLabel); // drawPanel에 추가
+                                drawPanel.repaint();
+                                // 2초 후 이미지 레이블 제거
+                                Timer timer = new Timer(4000, e -> {
+                                    drawPanel.remove(imageLabel);
+                                    drawPanel.repaint();
+                                    // 이미지 레이블 제거 후 동작 실행
+                                    countDownBar.start(); // 카운트다운 시작
+
+                                    // 제시어
+                                    String word = data.getMessage();
+                                    // 화가
+                                    String painter = data.getRoomName();
+                                    chatingListPanel.addMessage(painter + "님이 화가입니다.", ChatType.SYSTEM_MESSAGE);
+
+                                    // 화가만 그림을 그릴 수 있음, 화가에게만 제시어 표시
+                                    if (userId.equals(painter)) {
+                                        drawPanel.setEnabled(true);
+                                        chatingListPanel.setWord("제시어: ", word);
+                                        canDrawing = true;
+                                        if (!userId.equals(prevPainter)) { // 중복 호출 방지: 이전 라운드의 화가가 아닌 경우
+                                            inputPanel.getT_input().setEnabled(false); // 화가는 채팅을 못함
+                                            inputPanel.getB_send().setEnabled(false);
+                                        }
+                                    } else {// 화가가 아닌 사람들은 제시어 ???로 표시
+                                        drawPanel.setEnabled(false); // drawPanel 비활성화
+                                        canDrawing = false; // 그림 그리기 불가능 상태로 변경
+                                        if (userId.equals(prevPainter)) { // 중복 호출 방지: 이전 라운드의 화가였던 경우
+                                            inputPanel.getT_input().setEnabled(true); // 화가가 아닌 사람은 채팅 가능
+                                            inputPanel.getB_send().setEnabled(true);
+                                        }
+                                        StringBuilder maskedWord = new StringBuilder();
+                                        for (int i = 0; i < word.length(); i++) {
+                                            maskedWord.append("?");
+                                        }
+                                        chatingListPanel.setWord("제시어: ", maskedWord.toString());
                                     }
-                                } else {// 화가가 아닌 사람들은 제시어 ???로 표시
-                                    drawPanel.setEnabled(false); // drawPanel 비활성화
-                                    canDrawing = false; // 그림 그리기 불가능 상태로 변경
-                                    if (userId.equals(prevPainter)) { // 중복 호출 방지: 이전 라운드의 화가였던 경우
-                                        inputPanel.getT_input().setEnabled(true); // 화가가 아닌 사람은 채팅 가능
-                                        inputPanel.getB_send().setEnabled(true);
-                                    }
-                                    StringBuilder maskedWord = new StringBuilder();
-                                    for (int i = 0; i < word.length(); i++) {
-                                        maskedWord.append("?");
-                                    }
-                                    chatingListPanel.setWord("제시어: ", maskedWord.toString());
-                                }
-                                prevPainter = painter; // 현재 라운드의 화가 정보 저장
+                                    prevPainter = painter; // 현재 라운드의 화가 정보 저장
+                                });
+                                timer.setRepeats(false);
+                                timer.start();
+
                                 break;
                             // 정답을 맞춘 사람이 나타났을 때
                             case SketchingData.MODE_CORRECT:
                                 chatingListPanel.addMessage(data.getUserID() + "님이 정답을 맞췄습니다.", ChatType.SYSTEM_MESSAGE);
                                 drawPanel.clear();
-
+                                countDownBar.stop(); // 카운트다운 멈춤
                                 Vector<String> userIdList = data.getuserIDList();
                                 Vector<Integer> userscoreList = data.getuserScoreList();
-
                                 updateUserPanel(userIdList, userscoreList);
+
+                                // 정답자 표시 JLabel 생성
+                                JLabel correctLabel = new JLabel(data.getUserID() + "님이 정답을 맞추셨습니다!");
+                                correctLabel.setFont(new Font("맑은 고딕", Font.BOLD, 20)); // 폰트 설정
+                                correctLabel.setForeground(Color.RED); // 색상 설정
+                                correctLabel.setSize(500, 50); // 크기 설정
+                                correctLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+                                int correctLabelX = (drawPanel.getWidth() - correctLabel.getWidth()) / 2;
+                                int correctLabelY = 50;
+                                correctLabel.setLocation(correctLabelX, correctLabelY);
+                                drawPanel.add(correctLabel); // drawPanel에 추가
+
+                                // 3초 딜레이 추가
+                                Timer correctTimer = new Timer(3000, e -> {
+                                    drawPanel.remove(correctLabel); // JLabel 제거
+                                    drawPanel.repaint(); // drawPanel 다시 그리기
+                                });
+                                correctTimer.setRepeats(false);
+                                correctTimer.start();
                                 break;
                             case SketchingData.GAME_OVER:
                                 countDownBar.stop(); // 게임 종료 시 카운트다운 멈춤

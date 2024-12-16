@@ -14,6 +14,7 @@ public class DrawPanel extends JPanel {
 
     public DrawPanel() {
         setBackground(Color.WHITE); // 배경색 설정
+        setLayout(null); // 레이아웃 설정
     }
 
     // 점 대신 선을 추가 (색상 포함)
