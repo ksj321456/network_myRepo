@@ -405,6 +405,8 @@ public class DrawingServer extends JFrame {
                             printDisplay("NEW 플레이어: " + data.getOwnerName(), data.getRoomName());
                             //printDisplay("현재 접속중인 플레이어 수: " + rooms.get(data.getRoomName()).size(), data.getRoomName());
 
+                            broadcast(new SketchingData(SketchingData.MODE_ENTERSOUND, data.getRoomName(), true));
+
                         } else {
                             printDisplay(data.getRoomName() + " 방 생성 실패 ", "");
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), false));
@@ -451,6 +453,7 @@ public class DrawingServer extends JFrame {
 
                         // 방 입장 후, 방에 대한 정보 출력
                         printDisplay("NEW 플레이어: " + data.getOwnerName(), data.getRoomName());
+                        broadcast(new SketchingData(SketchingData.MODE_ENTERSOUND, data.getRoomName(), true));
                         //printDisplay("현재 접속중인 플레이어 수: " + rooms.get(data.getRoomName()).size(), data.getRoomName());
                     }
                     // 준비를 하거나 취소할 때의 로직

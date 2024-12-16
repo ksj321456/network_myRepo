@@ -320,7 +320,6 @@ public class DrawingClient extends JFrame {
                                     System.out.println("score: " + score);
                                 }
                                 updateUserPanel(userIDList, userScoreList);
-                                BgmManager.playAudio(5);
                                 break;
 
                             case SketchingData.MODE_INDIVIDUAL_READY:
@@ -517,6 +516,10 @@ public class DrawingClient extends JFrame {
                                 nobodyTimer.start();
                                 break;
 
+                            // 플레이어 입장시 입장 bgm 재생
+                            case SketchingData.MODE_ENTERSOUND:
+                                BgmManager.playAudio(5);
+                                break;
 
                             case SketchingData.GAME_OVER:
                                 countDownBar.stop(); // 게임 종료 시 카운트다운 멈춤
