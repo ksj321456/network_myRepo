@@ -120,7 +120,7 @@ public class DrawingServer extends JFrame {
 
     // control 패널
     private JPanel createControlPanel() {
-        JPanel controlPanel = new JPanel(new GridLayout(3, 1));
+        JPanel controlPanel = new JPanel(new GridLayout(1, 3));
         b_connect = new JButton("서버 시작");
         b_disconnect = new JButton("서버 중단");
         b_disconnect.setEnabled(false);
