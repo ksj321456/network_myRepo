@@ -5,17 +5,24 @@ import etc.SketchingData;
 import etc.WordList;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import java.awt.*;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DrawingServer extends JFrame {
     private static final int PORT = 12345;
@@ -24,7 +31,7 @@ public class DrawingServer extends JFrame {
 
     // 게임에 접속한 모든 클라이언트들을 저장하는 벡터(특정 게임방에 있는 클라이언트들을 저장하는 벡터가 아님. 모든 방의 클라이언트들을 저장)
     private Vector<ClientHandler> clients = new Vector<>();
-    private JTextArea t_display;
+    //private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
 
     //각 게임방별로 유저들을 관리하는 맵(특정 게임방에 있는 클라이언트들을 저장하는 hashMap)
@@ -38,23 +45,20 @@ public class DrawingServer extends JFrame {
 
     // 현재 해당 게임중인 방의 제시어
     private Map<String, String> wordMap = new HashMap<>();
+    private JTable t_display; // 서버 로그를 표시할 테이블
+    private DefaultTableModel tableModel; // 서버 로그 구분을위해 테이블 모델 차용
+    private JScrollPane scroll;
+    private ExecutorService executorService; // 스레드 풀을 위한 ExecutorService
 
     public DrawingServer() {
+        executorService = Executors.newFixedThreadPool(4); // 4개의 스레드를 가진 스레드 풀을 생성
         setTitle("Hansung Sketch Server");
-
-        /* 프레임의 위치를 화면 중앙으로 설정하는 절차들 */
-        // 현재 사용자의 모니터 화면의 크기를 가져옴
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        // 화면의 가로세로 중앙 계산
-        int centerX = (int) (screenSize.getWidth() - 550) / 2;
-        int centerY = (int) (screenSize.getHeight() - 600) / 2;
-        setBounds(centerX, centerY, 1000, 500);
-        /*-------------------------------------*/
-
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //setSize(400, 600);
+        //setLocationRelativeTo(null); // 화면 중앙에 프레임 띄우기
+        setBounds(0, 0, 700, 600);
         buildGUI();
         setVisible(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
     }
 
     private void buildGUI() {
@@ -64,22 +68,63 @@ public class DrawingServer extends JFrame {
 
     // 디스플레이 패널
     private JPanel createDisplayPanel() {
-        JPanel dispalyPanel = new JPanel(new BorderLayout());
-        t_display = new JTextArea();
-        JScrollPane scroll = new JScrollPane(t_display);
-        t_display.setEditable(false);
-        dispalyPanel.add(scroll);
+        JPanel displayPanel = new JPanel(new BorderLayout());
 
-        return dispalyPanel;
+        // JTable 추가
+        String[] columnNames = {"방", "메시지"}; // 테이블 컬럼명
+        tableModel = new DefaultTableModel(columnNames, 0);
+        t_display = new JTable(tableModel) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // 테이블의 셀을 편집 불가능하도록 설정.
+            }
+
+        };
+        t_display.setFillsViewportHeight(true); // 테이블을 스크롤팬 전체 영역을 채우도록 설정
+        t_display.setRowSelectionAllowed(false); // 행 선택 불가능하도록 설정
+        t_display.setFocusable(false); // 셀 선택 불가능하도록 설정
+
+        // 테이블의 마지막 행으로 스크롤 이동
+        // JTable의 렌더링 작업과 스크롤바 업데이트 작업 사이에 스레드 동기화를위해,
+        // 즉, 렌더링 작업이 완료되기 전에 스크롤바 업데이트 작업이 실행되면 스크롤바가 마지막 행까지 정확히 이동하지 못하는 문제를 해결하기 위해 EDT에서 스크롤바 업데이트 작업을 처리.
+        //EDT에서 스크롤바 업데이트 작업을 처리하면 렌더링 작업과 스크롤바 업데이트 작업이 순차적으로 실행되어, 렌더링 작업이 완료된 후에 스크롤바 업데이트 작업이 실행되므로 스크롤바가 마지막 행까지 정확하게 이동할 수 있게됨.
+        t_display.addComponentListener(new ComponentAdapter() {
+            // JTable 컴포넌트의 크기가 변경될 때마다(테이블에 행 추가될때마다) 스크롤바를 마지막 행으로 이동
+            @Override
+            public void componentResized(ComponentEvent e) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        JScrollBar verticalScrollBar = scroll.getVerticalScrollBar(); // 스크롤팬 (scroll)에서 수직 스크롤바 인스턴스 가져옴
+                        verticalScrollBar.setValue(verticalScrollBar.getMaximum()); // 수직 스크롤바의 값을 최대값으로 설정하여 스크롤바를 맨 아래로 이동시키는 효과
+                    }
+                });
+            }
+        });
+        scroll = new JScrollPane(t_display);
+        displayPanel.add(scroll, BorderLayout.CENTER);
+
+        TableColumn roomColumn = t_display.getColumnModel().getColumn(0);
+        TableColumn messageColumn = t_display.getColumnModel().getColumn(1);
+
+
+        roomColumn.setPreferredWidth(400);    // 방 컬럼 너비 설정
+        //roomColumn.setMaxWidth(1000);      // 방 컬럼 최대 너비 설정
+        messageColumn.setPreferredWidth(900);    // 메시지 컬럼 너비 설정
+        //messageColumn.setMaxWidth(1000);      // 메시지 컬럼 최대 너비 설정
+        messageColumn.setCellRenderer(new customTableCellRenderer());
+        roomColumn.setCellRenderer(new customTableCellRenderer());
+        displayPanel.setBorder(new LineBorder(new Color(225, 215, 246), 10)); // 두께 10
+        return displayPanel;
     }
 
     // control 패널
     private JPanel createControlPanel() {
-        JPanel controlPanel = new JPanel(new GridLayout(1, 0));
+        JPanel controlPanel = new JPanel(new GridLayout(3, 1));
         b_connect = new JButton("서버 시작");
-        b_disconnect = new JButton("서버 종료");
+        b_disconnect = new JButton("서버 중단");
         b_disconnect.setEnabled(false);
-        b_exit = new JButton("종료");
+        b_exit = new JButton("서버 종료");
 
         b_connect.addActionListener(new ActionListener() {
 
@@ -109,10 +154,17 @@ public class DrawingServer extends JFrame {
         });
 
         b_exit.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.exit(0); // 프로그램 정상 종료.
+                try {
+                    if (serverSocket != null) {
+                        serverSocket.close();
+                    }
+                    executorService.shutdown(); // 스레드 풀 종료
+                } catch (IOException ex) {
+                    System.err.println("서버 닫기 오류> " + ex.getMessage());
+                }
+                System.exit(0); // 프로그램 정상 종료
             }
         });
         controlPanel.add(b_connect);
@@ -145,20 +197,20 @@ public class DrawingServer extends JFrame {
 
             serverSocket = new ServerSocket(PORT);// 해당 포트와 연결된 서버소켓 객체 생성.
             inetAddress = InetAddress.getLocalHost();
-            printDisplay("서버가 시작되었습니다: " + inetAddress.getHostAddress() + "\n");
+            printDisplay("서버가 시작되었습니다: " + inetAddress.getHostAddress(), "");
 
             while (acceptThread == Thread.currentThread()) {
                 clientSocket = serverSocket.accept();
 
                 String cAddress = clientSocket.getInetAddress().getHostAddress();
-                printDisplay("클라이언트가 연결되었습니다: " + cAddress);
+                printDisplay("클라이언트가 연결되었습니다: " + cAddress, "");
 
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 clients.add(clientHandler);
                 clientHandler.start();
             }
         } catch (SocketException e) {
-            printDisplay("서버 소켓 종료");
+            printDisplay("서버 소켓 종료", "");
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -204,8 +256,8 @@ public class DrawingServer extends JFrame {
                     if (data.getMode() == SketchingData.MODE_LOGIN) { // 읽어온 메시지의 모드값이 로그인 메시지라면
                         userID = data.getUserID(); // uid에 로그인한 클라이언트의 아이디를 저장.
 //                        sendPlayerList(); // 각 클라이언트에게 현재 접속중인 플레이어 리스트 전송
-                        printDisplay("NEW 플레이어: " + userID);
-                        printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers());
+                        printDisplay("NEW 플레이어: " + userID, "");
+                        printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers(), "");
                         broadcast(new SketchingData(SketchingData.MODE_LOGIN, userID));
 
                         // 로그인시 방이 하나라도 있다면 새로운 클라이언트는 존재하는 방들을 확인해야 한다.
@@ -227,13 +279,13 @@ public class DrawingServer extends JFrame {
                         break; // 클라이언트측과의 연결을 해제
                     }                    //채팅 메시지를 받았을 때
                     else if (data.getMode() == SketchingData.MODE_CHAT) {
-                        printDisplay("[채팅 메시지]" + userID + ": " + data.getMessage());
+                        printDisplay("[채팅]" + userID + ": " + data.getMessage(), data.getRoomName());
                         broadcast(data);
 
                         // 해당 방이 게임 중이고 정답을 맞췄을 경우
                         if (isGameMap.get(data.getRoomName())) {
                             if (data.getMessage().equals(wordMap.get(data.getRoomName()))) {
-                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + "님이 정답을 맞췄습니다. -> 10점 추가");
+                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + "님이 정답을 맞췄습니다. -> 10점 추가", data.getRoomName());
 
                                 Vector<String> userIDList = new Vector<>();
                                 Vector<Integer> userScoreList = new Vector<>();
@@ -264,7 +316,7 @@ public class DrawingServer extends JFrame {
                                     // 해당 게임 방은 게임 중으로 설정
                                     isGameMap.put(data.getRoomName(), true);
                                     wordMap.put(data.getRoomName(), word);
-                                    printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.");
+                                    printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.", data.getRoomName());
                                 }
                                 // 정답을 맞춘 플레이어가 50점을 달성하였을 경우
                                 else {
@@ -275,7 +327,7 @@ public class DrawingServer extends JFrame {
                                     rooms.put(data.getRoomName(), map);
 
                                     String winner = data.getUserID();
-                                    printDisplay(data.getRoomName() + " 방에서 우승자가 나왔습니다. ** " + data.getUserID() + " **");
+                                    printDisplay(data.getRoomName() + " 방에서 우승자가 나왔습니다. ** " + data.getUserID() + " **", data.getRoomName());
 
                                     // 역정렬 맵
                                     SortedMap<String, Integer> sortedMap = new TreeMap<>(Collections.reverseOrder());
@@ -305,7 +357,7 @@ public class DrawingServer extends JFrame {
 
                                     broadcast(new SketchingData(SketchingData.GAME_OVER, data.getRoomName(), winner, userIdList, userscoreList, sortedMap));
 
-                                    printDisplay(data.getUserID() + " 방의 게임을 종료합니다.");
+                                    printDisplay(data.getUserID() + " 방의 게임을 종료합니다.", data.getRoomName());
                                 }
                             }
                         }
@@ -323,16 +375,15 @@ public class DrawingServer extends JFrame {
                             map.put(data.getOwnerName(), 0);
                             // key => 방 이름, value => key: userId, value: score
                             rooms.put(data.getRoomName(), map);
-                            printDisplay("방 생성 (방 이름: " + data.getRoomName() + ") 방 갯수: " + rooms.size());
+                            printDisplay("방 생성 (방 이름: " + data.getRoomName() + ") 방 갯수: " + rooms.size(), "");
                             // 현재 게임 방은 게임 중이 아님
                             isGameMap.put(data.getRoomName(), false);
                             // 방을 만든 직후이므로 해당 방의 준비 플레이어 수 = 0
                             roomReadyCnt.put(data.getRoomName(), 0);
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), true));
                             sendPlayerList();
-                        }
-                        else {
-                            printDisplay(data.getRoomName() + " 방 생성 실패 ");
+                        } else {
+                            printDisplay(data.getRoomName() + " 방 생성 실패 ", "");
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), false));
                         }
                     }
@@ -363,7 +414,7 @@ public class DrawingServer extends JFrame {
                             // 혼자 있을 때는 게임 플레이가 불가능 즉, 혼자 방에 있을 때는 준비 불가
                             if (rooms.get(data.getRoomName()).size() == 1) {
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), false));
-                                printDisplay(data.getUserID() + " 준비 실패, 2인 이상부터 준비 완료 가능.");
+                                printDisplay(data.getUserID() + " 준비 실패, 2인 이상부터 준비 완료 가능.", data.getRoomName());
                                 continue;
                             }
 
@@ -375,10 +426,10 @@ public class DrawingServer extends JFrame {
                             if (cnt >= 2 && rooms.get(data.getRoomName()).size() == cnt) {
                                 // 우선 플레이어가 준비완료되었음을 알려줌
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
-                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
+                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료", data.getRoomName());
                                 // 게임 시작을 클라이언트들에게 통지
                                 broadcast(new SketchingData(SketchingData.GAME_START, data.getRoomName()));
-                                printDisplay(data.getRoomName() + " 에서 게임이 시작되었습니다.");
+                                printDisplay(data.getRoomName() + " 에서 게임이 시작되었습니다.", data.getRoomName());
 
                                 // 바로 라운드 시작
                                 // word => 제시어
@@ -400,11 +451,11 @@ public class DrawingServer extends JFrame {
                                 // 해당 게임 방은 게임 중으로 설정
                                 isGameMap.put(data.getRoomName(), true);
                                 wordMap.put(data.getRoomName(), word);
-                                printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.");
+                                printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.", data.getRoomName());
                             }
                             // 그렇지 않다면 단순히 클라이언트에 준비완료 사실 전송
                             else {
-                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료");
+                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료", data.getRoomName());
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
                             }
                         }
@@ -417,7 +468,7 @@ public class DrawingServer extends JFrame {
 
                             broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
 
-                            printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 취소");
+                            printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 취소", data.getRoomName());
                         }
                     }
                 }
@@ -440,11 +491,11 @@ public class DrawingServer extends JFrame {
                 //while문을 빠져나왔다는 것은 클라이언트와의 연결이 끊어졌다는 뜻.
                 clients.remove(this); // 연결이 끊은 클라이언트를 사용자벡터에서 제거. 현재 작업스레드를 벡터에서 제거.
                 sendPlayerList(); // 한 플레이어가 퇴장했으므로, 플레이어 리스트를 갱신하여 모든 클라이언트에게 전송.
-                printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + clients.size() + currentPlayers());
+                printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + clients.size() + currentPlayers(), "");
             } catch (IOException e) {
                 clients.remove(this);
                 sendPlayerList(); // 한 플레이어가 퇴장했으므로, 플레이어 리스트를 갱신하여 모든 클라이언트에게 전송.
-                printDisplay(userID + " 연결 끊김. 현재 참가자 수 : " + clients.size());
+                printDisplay(userID + " 연결 끊김. 현재 참가자 수 : " + clients.size(), "");
             } catch (ClassNotFoundException e) {
                 System.err.println("객체 전달 오류> " + e.getMessage());
             } finally {
@@ -495,11 +546,11 @@ public class DrawingServer extends JFrame {
         }
 
         private void broadcast(SketchingData data) {
-            synchronized (clients) {
-                for (ClientHandler client : clients) {
-                    client.sendData(data);
-                }
+            //synchronized (clients) {
+            for (ClientHandler client : clients) {
+                client.sendData(data);
             }
+            //}
         }
 
         private void sendData(SketchingData data) {
@@ -528,14 +579,48 @@ public class DrawingServer extends JFrame {
         }
     }
 
+    // 서버 로그 출력을 textArea에 출력하는 방식에서 -> JTable에 테이블 row&column 형식으로 출력하는 방식으로 변경.
+    private void printDisplay(String msg, String roomName) {
 
-    private void printDisplay(String msg) {
-        t_display.append(msg + "\n");
-        t_display.setCaretPosition(t_display.getDocument().getLength());
+        //스레드 풀을 사용하여 로그 출력 작업을 별도 스레드에서 처리.
+        executorService.execute(new Runnable() { // 스레드 풀에서 스레드를 가져와 실행
+            @Override
+            public void run() {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        Object rowItem[] = {roomName, msg};
+                        tableModel.addRow(rowItem);
+                    }
+                });
+            }
+        });
+        //Object rowItem[] = {roomName, msg};
+        //tableModel.addRow(rowItem);
     }
+
 
     public static void main(String[] args) {
         DrawingServer drawingServer = new DrawingServer();
-        //drawingServer.startServer();
+    }
+}
+
+
+class customTableCellRenderer extends JTextArea implements TableCellRenderer {
+    public customTableCellRenderer() {
+        setLineWrap(true); // 텍스트가 셀 너비를 초과하면 자동으로 줄 바꿈
+        setWrapStyleWord(true); // 단어 단위로 줄 바꿈
+        setOpaque(true);
+    }
+
+    @Override
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        setText(value != null ? value.toString() : "");
+        setSize(table.getColumnModel().getColumn(column).getWidth(), getPreferredSize().height);
+        int preferredHeight = getPreferredSize().height;
+        if (table.getRowHeight(row) != preferredHeight) {
+            table.setRowHeight(row, preferredHeight);
+        }
+        return this;
     }
 }

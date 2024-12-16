@@ -363,6 +363,8 @@ public class DrawingClient extends JFrame {
                                         inputPanel.getB_send().setEnabled(false);
                                     }
                                 } else {// 화가가 아닌 사람들은 제시어 ???로 표시
+                                    drawPanel.setEnabled(false); // drawPanel 비활성화
+                                    canDrawing = false; // 그림 그리기 불가능 상태로 변경
                                     if (userId.equals(prevPainter)) { // 중복 호출 방지: 이전 라운드의 화가였던 경우
                                         inputPanel.getT_input().setEnabled(true); // 화가가 아닌 사람은 채팅 가능
                                         inputPanel.getB_send().setEnabled(true);
