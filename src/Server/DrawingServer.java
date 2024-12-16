@@ -655,7 +655,7 @@ public class DrawingServer extends JFrame {
                         StringBuilder sb = new StringBuilder(msg);
 
                         // roomName이 비어있지 않으면 (즉, 특정 방의 메시지일 경우)
-                        if (!roomName.isEmpty()) {
+                        if (msg.startsWith("NEW 플레이어:") || msg.startsWith("플레이어 <")) {
                             sb.append(" (");
 
                             // 해당 방에 접속 중인 사용자 목록 가져오기
