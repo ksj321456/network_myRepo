@@ -539,9 +539,9 @@ public class DrawingClient extends JFrame {
                                     String userId = parts[1];
                                     sb.append(String.format("%d등     %s      점수: %d\n", idx++, userId, score));
                                 }
-
-                                JOptionPane.showMessageDialog(null, sb.toString());
                                 BgmManager.playAudio(0);
+                                JOptionPane.showMessageDialog(null, sb.toString());
+
 
                                 // 게임을 종료 후 다시 그림을 못 그리게 설정
                                 canDrawing = false;
