@@ -70,7 +70,6 @@ public class LobbyClient extends JFrame {
                     if (data.getMode() == SketchingData.CREATE_ROOM) {
                         // 서버에서의 broadcast를 하나의 클라이언트에서만 받을 수 있도록 조건문 추가
                         if (userName.equals(data.getOwnerName())) {
-
                             // 방 생성 실패할 경우
                             if (!data.isSuccess()) {
                                 JOptionPane.showMessageDialog(null, "방 이름이 중복돼서 방 생성에 실패했습니다.");
