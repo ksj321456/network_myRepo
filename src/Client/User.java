@@ -2,6 +2,7 @@ package Client;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 
 public class User extends JPanel {
     private String userId = "";
@@ -12,7 +13,7 @@ public class User extends JPanel {
 
     public User(String myId) {
         this.myId = myId;
-        setLayout(new GridLayout(0, 2));
+        setLayout(new GridLayout(2, 0));
 //        userLabel = new JLabel("  ID: " + userId);
 //        scoreLabel = new JLabel("점수: " + score);
         userLabel = new JLabel();
@@ -36,11 +37,12 @@ public class User extends JPanel {
             scoreLabel.setText("점수: " + score);
         }
 
-        if (userId.equals(myId)) {
+        if (Objects.equals(userId, myId)) {
             setBorder(BorderFactory.createLineBorder(Color.MAGENTA, 3)); // 테두리 설정
-            
+        } else {
+            setBorder(BorderFactory.createLineBorder(Color.BLACK));
         }
-
+        //repaint(); // 테두리 변경 후 repaint() 호출
     }
 
     public String getUserId() {

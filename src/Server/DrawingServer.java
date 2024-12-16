@@ -120,7 +120,7 @@ public class DrawingServer extends JFrame {
 
     // control 패널
     private JPanel createControlPanel() {
-        JPanel controlPanel = new JPanel(new GridLayout(3, 1));
+        JPanel controlPanel = new JPanel(new GridLayout(1, 3));
         b_connect = new JButton("서버 시작");
         b_disconnect = new JButton("서버 중단");
         b_disconnect.setEnabled(false);
@@ -232,6 +232,7 @@ public class DrawingServer extends JFrame {
         private ObjectOutputStream out;
         private String userID; // 현재 서버측 각 클라이언트 소켓들이 연결중인 대응중인 사용자의 아이디
         private int score; // 현재 이 사용자의 점수
+        private String roomName; // roomName 속성 추가
 
         public ClientHandler(Socket clientSocket) {
             this.clientSocket = clientSocket;
@@ -256,8 +257,8 @@ public class DrawingServer extends JFrame {
                     if (data.getMode() == SketchingData.MODE_LOGIN) { // 읽어온 메시지의 모드값이 로그인 메시지라면
                         userID = data.getUserID(); // uid에 로그인한 클라이언트의 아이디를 저장.
 //                        sendPlayerList(); // 각 클라이언트에게 현재 접속중인 플레이어 리스트 전송
-                        printDisplay("NEW 플레이어: " + userID, "");
-                        printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers(), "");
+                        //printDisplay("NEW 플레이어: " + userID, "");
+                        //printDisplay("현재 접속중인 플레이어 수: " + clients.size() + currentPlayers(), "");
                         broadcast(new SketchingData(SketchingData.MODE_LOGIN, userID));
 
                         // 로그인시 방이 하나라도 있다면 새로운 클라이언트는 존재하는 방들을 확인해야 한다.
@@ -374,6 +375,7 @@ public class DrawingServer extends JFrame {
 
                         // 생성하고자하는 방의 이름이 중복된게 없을 때
                         if (!rooms.containsKey(data.getRoomName())) {
+                            this.roomName = data.getRoomName(); // roomName 설정
                             Map<String, Integer> map = new HashMap<>();
                             map.put(data.getOwnerName(), 0);
                             // key => 방 이름, value => key: userId, value: score
@@ -397,6 +399,10 @@ public class DrawingServer extends JFrame {
                             // 존재하는 방들의 이름과 해당 방에 접속해있는 클라이언트 수 전송
                             System.out.println("로비 클라이언트에게 데이터 전송 방 개수: " + roomNames.size());
                             broadcast(new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNames, data.getUserID(), userCnt));
+
+                            printDisplay("NEW 플레이어: " + data.getOwnerName(), data.getRoomName());
+                            //printDisplay("현재 접속중인 플레이어 수: " + rooms.get(data.getRoomName()).size(), data.getRoomName());
+
                         } else {
                             printDisplay(data.getRoomName() + " 방 생성 실패 ", "");
                             broadcast(new SketchingData(SketchingData.CREATE_ROOM, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), false));
@@ -406,6 +412,9 @@ public class DrawingServer extends JFrame {
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
                         // 전달받은 roomName 속성을 통해 방을 찾고 해당 Client.DrawingClient 불러오기
                         // 입장하고자 하는 방의 이름을 받아 value인 Map 업데이트 한 후 put
+
+                        this.roomName = data.getRoomName(); // roomName 설정
+
 
                         // 해당 입장하는 방의 상태가 게임 중일때는 접속 불가
                         if (isGameMap.get(data.getRoomName())) {
@@ -437,6 +446,10 @@ public class DrawingServer extends JFrame {
                         // 존재하는 방들의 이름과 해당 방에 접속해있는 클라이언트 수 전송
                         System.out.println("로비 클라이언트에게 데이터 전송 방 개수: " + roomNames.size());
                         broadcast(new SketchingData(SketchingData.SHOW_ROOM_LIST, roomNames, data.getUserID(), userCnt));
+
+                        // 방 입장 후, 방에 대한 정보 출력
+                        printDisplay("NEW 플레이어: " + data.getOwnerName(), data.getRoomName());
+                        //printDisplay("현재 접속중인 플레이어 수: " + rooms.get(data.getRoomName()).size(), data.getRoomName());
                     }
                     // 준비를 하거나 취소할 때의 로직
                     else if (data.getMode() == SketchingData.MODE_INDIVIDUAL_READY) {
@@ -540,15 +553,16 @@ public class DrawingServer extends JFrame {
                 //while문을 빠져나왔다는 것은 클라이언트와의 연결이 끊어졌다는 뜻.
                 clients.remove(this); // 연결이 끊은 클라이언트를 사용자벡터에서 제거. 현재 작업스레드를 벡터에서 제거.
                 sendPlayerList(); // 한 플레이어가 퇴장했으므로, 플레이어 리스트를 갱신하여 모든 클라이언트에게 전송.
-                printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + clients.size() + currentPlayers(), "");
+                //printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + rooms.get(roomName).size(), roomName);
             } catch (IOException e) {
                 clients.remove(this);
                 sendPlayerList(); // 한 플레이어가 퇴장했으므로, 플레이어 리스트를 갱신하여 모든 클라이언트에게 전송.
-                printDisplay(userID + " 연결 끊김. 현재 참가자 수 : " + clients.size(), "");
+                printDisplay(userID + " 연결 끊김. 현재 참가자 수 : " + +rooms.get(roomName).size(), roomName);
             } catch (ClassNotFoundException e) {
                 System.err.println("객체 전달 오류> " + e.getMessage());
             } finally {
                 try {
+                    printDisplay("플레이어 <" + userID + ">님이 퇴장하였습니다. 현재 참가자 수 : " + rooms.get(roomName).size(), roomName);
 /*                    // 클라이언트 소켓이 종료될 때 MODE_LOGOUT 메시지 처리
                     etc.SketchingData logoutData = new etc.SketchingData(etc.SketchingData.MODE_LOGOUT, data.getUserID(), clientSocket.getInetAddress().toString());
                     broadcastOthers(logoutData, this);*/
@@ -614,7 +628,6 @@ public class DrawingServer extends JFrame {
     }
 
     private void disconnect() {
-
         try {
             acceptThread = null;
             serverSocket.close();
@@ -638,7 +651,28 @@ public class DrawingServer extends JFrame {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        Object rowItem[] = {roomName, msg};
+
+                        StringBuilder sb = new StringBuilder(msg);
+
+                        // roomName이 비어있지 않으면 (즉, 특정 방의 메시지일 경우)
+                        if (!roomName.isEmpty()) {
+                            sb.append(" (");
+
+                            // 해당 방에 접속 중인 사용자 목록 가져오기
+                            Map<String, Integer> users = rooms.get(roomName);
+                            if (users != null) {
+                                for (String user : users.keySet()) {
+                                    sb.append(user).append(", ");
+                                }
+                                if (sb.toString().endsWith(", ")) {
+                                    sb.delete(sb.length() - 2, sb.length());
+                                }
+                            }
+
+                            sb.append(")");
+                        }
+
+                        Object rowItem[] = {roomName, sb.toString()};
                         tableModel.addRow(rowItem);
                     }
                 });

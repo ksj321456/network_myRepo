@@ -1,5 +1,6 @@
 package Client;
 
+import etc.BgmManager;
 import etc.ChatType;
 import etc.Line;
 import etc.SketchingData;
@@ -56,6 +57,8 @@ public class DrawingClient extends JFrame {
         this.in = in;
         buildGUI(); // GUI 구성
         connectToServer(); // 서버에 접속요청
+
+        BgmManager.loopAudio(4);
     }
 
     private void buildGUI() {
@@ -317,6 +320,7 @@ public class DrawingClient extends JFrame {
                                     System.out.println("score: " + score);
                                 }
                                 updateUserPanel(userIDList, userScoreList);
+                                BgmManager.playAudio(5);
                                 break;
 
                             case SketchingData.MODE_INDIVIDUAL_READY:
@@ -345,7 +349,7 @@ public class DrawingClient extends JFrame {
                                 break;
                             case SketchingData.ROUND_START:
                                 // 새로운 JLabel 생성 및 이미지 설정
-                                JLabel imageLabel = new JLabel(new ImageIcon("images/areYouReady.png"));
+                                JLabel imageLabel = new JLabel(new ImageIcon("images/letsPlay.png"));
                                 // JLabel 크기 설정 (이미지 크기와 동일하게)
                                 imageLabel.setSize(300, 300);
 
@@ -356,8 +360,8 @@ public class DrawingClient extends JFrame {
                                 imageLabel.setLocation(x, y); // 위치 설정
                                 drawPanel.add(imageLabel); // drawPanel에 추가
                                 drawPanel.repaint();
-                                // 2초 후 이미지 레이블 제거
-                                Timer timer = new Timer(4000, e -> {
+                                // 5초 후 이미지 레이블 제거
+                                Timer timer = new Timer(5000, e -> {
                                     drawPanel.remove(imageLabel);
                                     drawPanel.repaint();
                                     // 이미지 레이블 제거 후 동작 실행
@@ -399,6 +403,7 @@ public class DrawingClient extends JFrame {
                                 break;
                             // 정답을 맞춘 사람이 나타났을 때
                             case SketchingData.MODE_CORRECT:
+                                BgmManager.playAudio(6);
                                 chatingListPanel.addMessage(data.getUserID() + "님이 정답을 맞췄습니다.", ChatType.SYSTEM_MESSAGE);
                                 drawPanel.clear();
                                 countDownBar.stop(); // 카운트다운 멈춤
@@ -428,8 +433,23 @@ public class DrawingClient extends JFrame {
                                 break;
 
                             case SketchingData.MODE_NOBODY_CORRECT:
+                                BgmManager.playAudio(3);
                                 drawPanel.clear();
                                 countDownBar.stop(); // 카운트다운 멈춤
+
+
+                                JLabel imageLabel2 = new JLabel(new ImageIcon("images/areYouReady.png"));
+                                // JLabel 크기 설정 (이미지 크기와 동일하게)
+                                imageLabel2.setSize(300, 300);
+
+                                imageLabel2.setHorizontalAlignment(SwingConstants.CENTER);
+
+                                int x2 = (drawPanel.getWidth() - imageLabel2.getWidth()) / 2;
+                                int y2 = (drawPanel.getHeight() - imageLabel2.getHeight()) / 2;
+                                imageLabel2.setLocation(x2, y2); // 위치 설정
+                                drawPanel.add(imageLabel2); // drawPanel에 추가
+                                drawPanel.repaint();
+
                                 // 정답자 표시 JLabel 생성
                                 JLabel nobodyLabel = new JLabel("아무도 정답을 맞추지 못했습니다!");
                                 nobodyLabel.setFont(new Font("맑은 고딕", Font.BOLD, 20)); // 폰트 설정
@@ -446,9 +466,18 @@ public class DrawingClient extends JFrame {
                                 chatingListPanel.addMessage("아무도 정답을 맞추지 못했습니다!", ChatType.SYSTEM_MESSAGE);
                                 chatingListPanel.addMessage(painter + "님이 다시 화가로 플레이합니다.", ChatType.SYSTEM_MESSAGE);
 
+                                // 5초 딜레이 후 imageLabel2 제거
+                                Timer nobodyTimer2 = new Timer(5000, e -> {
+                                    drawPanel.remove(imageLabel2);
+                                    drawPanel.repaint(); // drawPanel 다시 그리기
+                                });
+                                nobodyTimer2.setRepeats(false);
+                                nobodyTimer2.start();
+
                                 // 3초 딜레이 추가
                                 Timer nobodyTimer = new Timer(3000, e -> {
                                     drawPanel.remove(nobodyLabel); // JLabel 제거
+
                                     drawPanel.repaint(); // drawPanel 다시 그리기
                                     // 이미지 레이블 제거 후 동작 실행
                                     countDownBar.start(); // 카운트다운 시작
@@ -510,6 +539,7 @@ public class DrawingClient extends JFrame {
                                 }
 
                                 JOptionPane.showMessageDialog(null, sb.toString());
+                                BgmManager.playAudio(0);
 
                                 // 게임을 종료 후 다시 그림을 못 그리게 설정
                                 canDrawing = false;
@@ -554,6 +584,7 @@ public class DrawingClient extends JFrame {
 
     public void disconnect() {
         send(new SketchingData(SketchingData.MODE_LOGOUT, userId));
+        BgmManager.stopAudio(4);
         try {
             if (out != null) {
                 out.close();
