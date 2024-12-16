@@ -501,8 +501,8 @@ public class DrawingServer extends JFrame {
                         // painter => 정답을 맞춘 사람이 화가가 됨
                         String painter = data.getUserID();
 
-                        // 클라이언트에 모드값, 방 이름, 제시어, 화가가 될 클라이언트 랜덤으로 선정 후 전송
-                        broadcast(new SketchingData(SketchingData.ROUND_START, data.getRoomName(), word, painter));
+
+                        broadcast(new SketchingData(SketchingData.MODE_NOBODY_CORRECT, data.getRoomName(), word, painter));
                         // 해당 게임 방은 게임 중으로 설정
                         isGameMap.put(data.getRoomName(), true);
                         wordMap.put(data.getRoomName(), word);
