@@ -10,12 +10,12 @@ public abstract class UserPanel extends JPanel {
     protected User user3;
     protected User user4;
 
-    public UserPanel() {
+    public UserPanel(String userId) {
         setLayout(new GridLayout(4, 0));
-        user1 = new User();
-        user2 = new User();
-        user3 = new User();
-        user4 = new User();
+        user1 = new User(userId);
+        user2 = new User(userId);
+        user3 = new User(userId);
+        user4 = new User(userId);
         add(user1);
         add(user2);
         add(user3);

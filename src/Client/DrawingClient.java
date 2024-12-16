@@ -89,10 +89,10 @@ public class DrawingClient extends JFrame {
 
         JPanel centerPanel = new JPanel(new BorderLayout());
         drawPanel = new DrawPanel();
-        leftUserPanel = new LeftUserPanel();
-        rightUserPanel = new RightUserPanel();
+        leftUserPanel = new LeftUserPanel(userId);
+        rightUserPanel = new RightUserPanel(userId);
         chatingListPanel = new ChatingListPanel();
-        countDownBar = new CountDownBar(30); // 카운트다운바 생성(인자값: 카운트다운 시간)
+        countDownBar = new CountDownBar(30, this); // 카운트다운바 생성(인자값: 카운트다운 시간)
         drawingSetting = new DrawingSetting(countDownBar);
         inputPanel = new InputPanel(this);
         bottomPanel = new BottomPanel(this);
@@ -426,6 +426,67 @@ public class DrawingClient extends JFrame {
                                 correctTimer.setRepeats(false);
                                 correctTimer.start();
                                 break;
+
+                            case SketchingData.MODE_NOBODY_CORRECT:
+                                drawPanel.clear();
+                                countDownBar.stop(); // 카운트다운 멈춤
+                                // 정답자 표시 JLabel 생성
+                                JLabel nobodyLabel = new JLabel("아무도 정답을 맞추지 못했습니다!");
+                                nobodyLabel.setFont(new Font("맑은 고딕", Font.BOLD, 20)); // 폰트 설정
+                                nobodyLabel.setForeground(Color.RED); // 색상 설정
+                                nobodyLabel.setSize(500, 50); // 크기 설정
+                                nobodyLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+                                int nobodyLabelX = (drawPanel.getWidth() - nobodyLabel.getWidth()) / 2;
+                                int nobodyLabelY = 50;
+                                nobodyLabel.setLocation(nobodyLabelX, nobodyLabelY);
+                                drawPanel.add(nobodyLabel); // drawPanel에 추가
+
+                                String painter = data.getRoomName();
+                                chatingListPanel.addMessage("아무도 정답을 맞추지 못했습니다!", ChatType.SYSTEM_MESSAGE);
+                                chatingListPanel.addMessage(painter + "님이 다시 화가로 플레이합니다.", ChatType.SYSTEM_MESSAGE);
+
+                                // 3초 딜레이 추가
+                                Timer nobodyTimer = new Timer(3000, e -> {
+                                    drawPanel.remove(nobodyLabel); // JLabel 제거
+                                    drawPanel.repaint(); // drawPanel 다시 그리기
+                                    // 이미지 레이블 제거 후 동작 실행
+                                    countDownBar.start(); // 카운트다운 시작
+
+                                    // 제시어
+                                    String word = data.getMessage();
+                                    // 화가
+
+
+                                    // 화가만 그림을 그릴 수 있음, 화가에게만 제시어 표시
+                                    if (userId.equals(painter)) {
+                                        drawPanel.setEnabled(true);
+                                        chatingListPanel.setWord("제시어: ", word);
+                                        canDrawing = true;
+                                        if (!userId.equals(prevPainter)) { // 중복 호출 방지: 이전 라운드의 화가가 아닌 경우
+                                            inputPanel.getT_input().setEnabled(false); // 화가는 채팅을 못함
+                                            inputPanel.getB_send().setEnabled(false);
+                                        }
+                                    } else {// 화가가 아닌 사람들은 제시어 ???로 표시
+                                        drawPanel.setEnabled(false); // drawPanel 비활성화
+                                        canDrawing = false; // 그림 그리기 불가능 상태로 변경
+                                        if (userId.equals(prevPainter)) { // 중복 호출 방지: 이전 라운드의 화가였던 경우
+                                            inputPanel.getT_input().setEnabled(true); // 화가가 아닌 사람은 채팅 가능
+                                            inputPanel.getB_send().setEnabled(true);
+                                        }
+                                        StringBuilder maskedWord = new StringBuilder();
+                                        for (int i = 0; i < word.length(); i++) {
+                                            maskedWord.append("?");
+                                        }
+                                        chatingListPanel.setWord("제시어: ", maskedWord.toString());
+                                    }
+                                    prevPainter = painter; // 현재 라운드의 화가 정보 저장
+                                });
+                                nobodyTimer.setRepeats(false);
+                                nobodyTimer.start();
+                                break;
+
+
                             case SketchingData.GAME_OVER:
                                 countDownBar.stop(); // 게임 종료 시 카운트다운 멈춤
                                 drawPanel.clear();
@@ -546,6 +607,14 @@ public class DrawingClient extends JFrame {
         send(new SketchingData(SketchingData.MODE_CHAT, userId, message, roomName));
         // ChatMsg 객체로 만들어서 전송.
     }
+
+
+    public void nobodyCorrect() {
+        if (canDrawing)  // 화가일 때만 메시지 전송
+            send(new SketchingData(SketchingData.MODE_NOBODY_CORRECT, userId, "", roomName));
+
+    }
+
 
 //
 //    public static void main(String[] args) {
