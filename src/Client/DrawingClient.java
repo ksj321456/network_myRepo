@@ -464,6 +464,8 @@ public class DrawingClient extends JFrame {
 
                                 String painter = data.getRoomName();
                                 chatingListPanel.addMessage("아무도 정답을 맞추지 못했습니다!", ChatType.SYSTEM_MESSAGE);
+                                String msg = String.format("정답은 %s 입니다!", data.getMessage());
+                                chatingListPanel.addMessage(msg, ChatType.SYSTEM_MESSAGE);
                                 chatingListPanel.addMessage(painter + "님이 다시 화가로 플레이합니다.", ChatType.SYSTEM_MESSAGE);
 
                                 // 5초 딜레이 후 imageLabel2 제거
@@ -643,7 +645,6 @@ public class DrawingClient extends JFrame {
     public void nobodyCorrect() {
         if (canDrawing)  // 화가일 때만 메시지 전송
             send(new SketchingData(SketchingData.MODE_NOBODY_CORRECT, userId, "", roomName));
-
     }
 
 
