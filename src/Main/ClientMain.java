@@ -50,7 +50,8 @@ public class ClientMain extends JFrame {
         l_Title.setFont(new Font("Comic Sans MS", Font.BOLD, 40));
 
         // JLabel의 크기를 텍스트에 맞게 조절
-        l_Title.setSize(l_Title.getPreferredSize());
+        l_Title.setSize(400, 60);
+        //l_Title.setSize(l_Title.getPreferredSize());
         l_Title.setLocation(85, 30); // 제목 위치 조정
 
 
