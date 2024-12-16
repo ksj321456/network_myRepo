@@ -92,7 +92,7 @@ public class DrawingClient extends JFrame {
         leftUserPanel = new LeftUserPanel();
         rightUserPanel = new RightUserPanel();
         chatingListPanel = new ChatingListPanel();
-        countDownBar = new CountDownBar(30); // 카운트다운바 생성(인자값: 카운트다운 시간)
+        countDownBar = new CountDownBar(30, this); // 카운트다운바 생성(인자값: 카운트다운 시간)
         drawingSetting = new DrawingSetting(countDownBar);
         inputPanel = new InputPanel(this);
         bottomPanel = new BottomPanel(this);
@@ -546,6 +546,13 @@ public class DrawingClient extends JFrame {
         send(new SketchingData(SketchingData.MODE_CHAT, userId, message, roomName));
         // ChatMsg 객체로 만들어서 전송.
     }
+
+
+    public void nobodyCorrect() {
+        send(new SketchingData(SketchingData.MODE_NOBODY_CORRECT, roomName, userId));
+
+    }
+
 
 //
 //    public static void main(String[] args) {

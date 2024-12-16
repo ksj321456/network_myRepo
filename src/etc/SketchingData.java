@@ -22,6 +22,7 @@ public class SketchingData implements Serializable {
     public static final int CREATE_ROOM = 11;   // 방을 생성하는 모드
     public static final int SHOW_ROOM_LIST = 12;        // 새로운 클라이언트에게 방의 리스트들을 보여주는 모드
     public static final int ENTER_ROOM = 13;        // 방에 입장하는 모드
+    public static final int MODE_NOBODY_CORRECT = 14; // 아무도 제시어를 맞추지 못했을 때의 모드
 
     private Line line;
     private int mode;
@@ -49,6 +50,13 @@ public class SketchingData implements Serializable {
     // 로그인, 로그아웃용 생성자 + 게임 시작을 알리는 프로토콜
     public SketchingData(int mode, String userID) {
         this.mode = mode;
+        this.userID = userID;
+    }
+
+    // 아무도 제시어를 맞추지 못했을 때의 프로토콜
+    public SketchingData(int mode, String roomName, String userID) {
+        this.mode = mode;
+        this.roomName = roomName;
         this.userID = userID;
     }
 
@@ -115,7 +123,7 @@ public class SketchingData implements Serializable {
         this.isSuccess = isSuccess;
     }
 
-    // 현재 존재하는 방에 리스트들을 갖고올 때의 생성자
+    // 현재 존재하는 방들의 리스트들을 갖고올 때의 생성자
     public SketchingData(int mode, Vector<String> roomList, String userID, Vector<Integer> userCnt) {
         this.mode = mode;
         this.roomList = roomList;
