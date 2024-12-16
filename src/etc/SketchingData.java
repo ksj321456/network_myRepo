@@ -35,6 +35,7 @@ public class SketchingData implements Serializable {
     private String IPAddress;
     private int portNumber;
     private Vector<String> roomList;
+    private String prevWord;
 
     // 방에 접속해 있는 클라이언트들의 수
     private Vector<Integer> userCnt;
@@ -89,12 +90,21 @@ public class SketchingData implements Serializable {
 
     // 채팅 메시지 전송시 생성자
     // 서버에서 라운드 전송시 생성자 => userID는 방 이름, message는 제시어, roomName은 화가의 userID
-    // + 아무도 제시어를 맞추지 못했을 때의 생성자
+
     public SketchingData(int mode, String userID, String message, String roomName) {
         this.mode = mode;
         this.userID = userID;
         this.message = message;
         this.roomName = roomName;
+    }
+
+    // + 아무도 제시어를 맞추지 못했을 때의 생성자
+    public SketchingData(int mode, String userID, String message, String roomName, String prevWord) {
+        this.mode = mode;
+        this.userID = userID;
+        this.message = message;
+        this.roomName = roomName;
+        this.prevWord = prevWord;
     }
 
     // 플레이어&점수리스트 전송용 생성자
@@ -222,4 +232,9 @@ public class SketchingData implements Serializable {
     public SortedMap<String, Integer> getSortedMap() {
         return sortedMap;
     }
+
+    public String getPrevWord() {
+        return prevWord;
+    }
+
 }

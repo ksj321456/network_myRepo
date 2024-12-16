@@ -451,7 +451,7 @@ public class DrawingClient extends JFrame {
                                 drawPanel.repaint();
 
                                 // 정답자 표시 JLabel 생성
-                                JLabel nobodyLabel = new JLabel("아무도 정답을 맞추지 못했습니다! 정답은 <" + data.getMessage() + "> 였습니다!");
+                                JLabel nobodyLabel = new JLabel("아무도 정답을 맞추지 못했습니다! 정답은 <" + data.getPrevWord() + "> 였습니다!");
                                 nobodyLabel.setFont(new Font("맑은 고딕", Font.BOLD, 15)); // 폰트 설정
                                 nobodyLabel.setForeground(Color.RED); // 색상 설정
                                 nobodyLabel.setSize(500, 50); // 크기 설정
@@ -464,7 +464,7 @@ public class DrawingClient extends JFrame {
 
                                 String painter = data.getRoomName();
                                 chatingListPanel.addMessage("아무도 정답을 맞추지 못했습니다!", ChatType.SYSTEM_MESSAGE);
-                                String msg = String.format("정답은 %s 였습니다!", data.getMessage());
+                                String msg = String.format("정답은 %s 였습니다!", data.getPrevWord());
                                 chatingListPanel.addMessage(msg, ChatType.ANSWER_MESSAGE);
                                 chatingListPanel.addMessage(painter + "님이 다시 화가로 플레이합니다.", ChatType.SYSTEM_MESSAGE);
 

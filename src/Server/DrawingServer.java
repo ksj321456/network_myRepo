@@ -527,8 +527,10 @@ public class DrawingServer extends JFrame {
                         // painter => 정답을 맞춘 사람이 화가가 됨
                         String painter = data.getUserID();
 
+                        // 이전 라운드의 정답 단어를 가져옴
+                        String prevWord = wordMap.get(data.getRoomName());
 
-                        broadcast(new SketchingData(SketchingData.MODE_NOBODY_CORRECT, data.getRoomName(), word, painter));
+                        broadcast(new SketchingData(SketchingData.MODE_NOBODY_CORRECT, data.getRoomName(), word, painter, prevWord));
                         // 해당 게임 방은 게임 중으로 설정
                         isGameMap.put(data.getRoomName(), true);
                         wordMap.put(data.getRoomName(), word);
