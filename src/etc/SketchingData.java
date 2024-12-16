@@ -115,7 +115,7 @@ public class SketchingData implements Serializable {
         this.isSuccess = isSuccess;
     }
 
-    // 현재 존재하는 방에 리스트들을 갖고올 때의 생성자
+    // 현재 존재하는 방들의 리스트들을 갖고올 때의 생성자
     public SketchingData(int mode, Vector<String> roomList, String userID, Vector<Integer> userCnt) {
         this.mode = mode;
         this.roomList = roomList;
