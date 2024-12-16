@@ -16,8 +16,10 @@ public class CountDownBar extends JPanel {
     private boolean isWarning = false; // 경고 상태 flag
     private Timer warningTimer; // 시간임박 경고 타이머
     private Color warningColor = Color.RED; // 경고 깜빡임 색상
+    private DrawingClient drawingClient;
 
-    public CountDownBar(int duration) {
+    public CountDownBar(int duration, DrawingClient drawingClient) {
+        this.drawingClient = drawingClient;
         this.timeLeft = duration;
         this.duration = duration;
         this.barWidth = 350;
@@ -51,6 +53,7 @@ public class CountDownBar extends JPanel {
                 if (timeLeft <= 0) {
                     timer.stop();
                     stopWarning(); // 시간 종료 시 경고 멈춤
+                    drawingClient.nobodyCorrect();
                 }
             }
         });
