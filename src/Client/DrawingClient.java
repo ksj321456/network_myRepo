@@ -521,7 +521,7 @@ public class DrawingClient extends JFrame {
                             case SketchingData.GAME_OVER:
                                 countDownBar.stop(); // 게임 종료 시 카운트다운 멈춤
                                 drawPanel.clear();
-                                chatingListPanel.addMessage(data.getUserID() + "님이 50점을 달성하여 게임을 종료합니다.", ChatType.SYSTEM_MESSAGE);
+                                chatingListPanel.addMessage(data.getUserID() + "님이 50점을 달성하여 게임을 종료합니다.", ChatType.WINNER);
 
                                 Vector<String> useridList = data.getuserIDList();
                                 Vector<Integer> userscorelist = data.getuserScoreList();

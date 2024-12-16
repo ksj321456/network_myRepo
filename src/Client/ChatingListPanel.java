@@ -52,6 +52,9 @@ public class ChatingListPanel extends JPanel {
             case ANSWER_MESSAGE: // 정답 메시지
                 message = "[정답] " + message;
                 break;
+            case WINNER: // 우승자 메시지
+                message = "[우승자] " + message;
+                break;
         }
         chatModel.addElement(message);
 
@@ -88,6 +91,8 @@ public class ChatingListPanel extends JPanel {
                 component.setBackground(Color.WHITE); // 시스템 메시지의 색상 설정
             } else if (message.startsWith("[정답]")) {
                 component.setBackground(new Color(250, 117, 117)); // 정답 메시지의 색상 설정
+            } else if (message.startsWith("[우승자]")) {
+                component.setBackground(new Color(246, 246, 76)); // 우승자 메시지의 색상 설정
             } else {
                 component.setBackground(Color.LIGHT_GRAY); // 다른 사용자가 입력한 메시지의 색상 설정
             }
