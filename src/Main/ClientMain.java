@@ -1,6 +1,7 @@
 package Main;
 
 import Lobby.LobbyClient;
+import etc.BgmManager;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -35,6 +36,8 @@ public class ClientMain extends JFrame {
         setVisible(true);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        BgmManager.loopAudio(2); // 메인화면 bgm 무한재생
     }
 
     private void buildGUI() {
@@ -167,6 +170,7 @@ public class ClientMain extends JFrame {
     }
 
     private void startGame(String userName, String ipAddress, int portNumber) {
+        BgmManager.stopAudio(2); // BGM 중지
         dispose(); // 현재 창 닫기
         LobbyClient lobbyClient = new LobbyClient(userName, ipAddress, portNumber);
 

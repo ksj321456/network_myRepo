@@ -1,6 +1,7 @@
 package Lobby;
 
 import Client.DrawingClient;
+import etc.BgmManager;
 import etc.SketchingData;
 
 import javax.swing.*;
@@ -38,6 +39,8 @@ public class LobbyClient extends JFrame {
         sendUserID();
         receiveThread = new ReceiveThread();
         receiveThread.start();
+
+        BgmManager.loopAudio(1); // 메인화면 bgm 무한재생
     }
 
     private void connectToServer() {
@@ -73,8 +76,7 @@ public class LobbyClient extends JFrame {
                             // 방 생성 실패할 경우
                             if (!data.isSuccess()) {
                                 JOptionPane.showMessageDialog(null, "방 이름이 중복돼서 방 생성에 실패했습니다.");
-                            }
-                            else {
+                            } else {
                                 // 서버로부터 방 생성 정보 수신
                                 String roomName = data.getRoomName();
 
@@ -82,7 +84,7 @@ public class LobbyClient extends JFrame {
                                 roomListModel.addElement(roomName);
 
                                 //how to stop the thread ?
-
+                                BgmManager.stopAudio(1);
                                 dispose();
 
                                 new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
@@ -109,6 +111,7 @@ public class LobbyClient extends JFrame {
                         // 해당 방 인원 수가 8명 미만인 경우에만 입장 가능
                         if (data.isSuccess()) {
                             if (userName.equals(data.getOwnerName())) {
+                                BgmManager.stopAudio(1);
                                 dispose();
                                 new DrawingClient(socket, out, in, data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber());
                                 receiveThread = null;

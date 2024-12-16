@@ -13,7 +13,7 @@ public class LogoutBtn extends TemplateButton {
     private DrawingClient drawingClient; // Client.DrawingClient 객체를 필드로 선언
 
     public LogoutBtn(DrawingClient drawingClient) { // 생성자에 Client.DrawingClient 객체를 매개변수로 받음
-        super("images/logout.png", new Color(180, 222, 255)); // 버튼 이름, 아이콘 경로, 배경색 설정
+        super("images/logout.png", new Color(255, 185, 185)); // 버튼 이름, 아이콘 경로, 배경색 설정
         this.drawingClient = drawingClient;
     }
 

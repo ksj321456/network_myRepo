@@ -22,6 +22,7 @@ public class DrawingSetting extends JPanel {
         this.countDownBar = countDownBar;
         setLayout(new BorderLayout());
         JPanel settingsPanel = new JPanel(new FlowLayout());
+        settingsPanel.setBackground(new Color(195, 234, 253));
         colorBox = new JComboBox<>(lineColor);
         strokeBox = new JComboBox<>(lineStroke);
         eraser = new JButton("지우개");
