@@ -95,7 +95,7 @@ public class DrawingClient extends JFrame {
         leftUserPanel = new LeftUserPanel(userId);
         rightUserPanel = new RightUserPanel(userId);
         chatingListPanel = new ChatingListPanel();
-        countDownBar = new CountDownBar(30, this); // 카운트다운바 생성(인자값: 카운트다운 시간)
+        countDownBar = new CountDownBar(60, this); // 카운트다운바 생성(인자값: 카운트다운 시간 1분)
         drawingSetting = new DrawingSetting(countDownBar);
         inputPanel = new InputPanel(this);
         bottomPanel = new BottomPanel(this);

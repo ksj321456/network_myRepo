@@ -288,7 +288,7 @@ public class DrawingServer extends JFrame {
                         // 해당 방이 게임 중이고 정답을 맞췄을 경우
                         if (isGameMap.get(data.getRoomName())) {
                             if (data.getMessage().equals(wordMap.get(data.getRoomName()))) {
-                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + "님이 정답을 맞췄습니다. -> 10점 추가", data.getRoomName());
+                                printDisplay(data.getRoomName() + " 방에서 <" + data.getUserID() + ">님이 정답을 맞췄습니다. -> 10점 추가", data.getRoomName());
 
                                 Vector<String> userIDList = new Vector<>();
                                 Vector<Integer> userScoreList = new Vector<>();
@@ -319,7 +319,7 @@ public class DrawingServer extends JFrame {
                                     // 해당 게임 방은 게임 중으로 설정
                                     isGameMap.put(data.getRoomName(), true);
                                     wordMap.put(data.getRoomName(), word);
-                                    printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.", data.getRoomName());
+                                    printDisplay("<" + data.getRoomName() + "> 방에서 라운드가 시작됩니다.", data.getRoomName());
                                 }
                                 // 정답을 맞춘 플레이어가 50점을 달성하였을 경우
                                 else {
@@ -330,7 +330,7 @@ public class DrawingServer extends JFrame {
                                     rooms.put(data.getRoomName(), map);
 
                                     String winner = data.getUserID();
-                                    printDisplay(data.getRoomName() + " 방에서 우승자가 나왔습니다. ** " + data.getUserID() + " **", data.getRoomName());
+                                    printDisplay("<" + data.getRoomName() + "> 방에서 우승자가 나왔습니다. ** " + data.getUserID() + " **", data.getRoomName());
 
                                     // 역정렬 맵
                                     SortedMap<String, Integer> sortedMap = new TreeMap<>(Collections.reverseOrder());
@@ -473,10 +473,10 @@ public class DrawingServer extends JFrame {
                             if (cnt >= 2 && rooms.get(data.getRoomName()).size() == cnt) {
                                 // 우선 플레이어가 준비완료되었음을 알려줌
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
-                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료", data.getRoomName());
+                                printDisplay("<" + data.getRoomName() + "> 방에서 <" + data.getUserID() + "> 준비 완료", data.getRoomName());
                                 // 게임 시작을 클라이언트들에게 통지
                                 broadcast(new SketchingData(SketchingData.GAME_START, data.getRoomName()));
-                                printDisplay(data.getRoomName() + " 에서 게임이 시작되었습니다.", data.getRoomName());
+                                printDisplay("<" + data.getRoomName() + "> 에서 게임이 시작되었습니다.", data.getRoomName());
                                 // 해당 게임 방의 상태를 게임중으로 변경
                                 isGameMap.put(data.getRoomName(), true);
 
@@ -500,11 +500,11 @@ public class DrawingServer extends JFrame {
                                 // 해당 게임 방은 게임 중으로 설정
                                 isGameMap.put(data.getRoomName(), true);
                                 wordMap.put(data.getRoomName(), word);
-                                printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.", data.getRoomName());
+                                printDisplay("<" + data.getRoomName() + "> 방에서 라운드가 시작됩니다.", data.getRoomName());
                             }
                             // 그렇지 않다면 단순히 클라이언트에 준비완료 사실 전송
                             else {
-                                printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 완료", data.getRoomName());
+                                printDisplay("<" + data.getRoomName() + "> 방에서 <" + data.getUserID() + "> 준비 완료", data.getRoomName());
                                 broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
                             }
                         }
@@ -517,7 +517,7 @@ public class DrawingServer extends JFrame {
 
                             broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getUserID(), data.isReady(), true));
 
-                            printDisplay(data.getRoomName() + " 방에서 " + data.getUserID() + " 준비 취소", data.getRoomName());
+                            printDisplay("<" + data.getRoomName() + "> 방에서 <" + data.getUserID() + "> 준비 취소", data.getRoomName());
                         }
                     } else if (data.getMode() == SketchingData.MODE_NOBODY_CORRECT) {
                         // 정답자가 없을 때
@@ -532,7 +532,7 @@ public class DrawingServer extends JFrame {
                         // 해당 게임 방은 게임 중으로 설정
                         isGameMap.put(data.getRoomName(), true);
                         wordMap.put(data.getRoomName(), word);
-                        printDisplay(data.getRoomName() + " 방에서 라운드가 시작됩니다.", data.getRoomName());
+                        printDisplay("<" + data.getRoomName() + "> 방에서 라운드가 시작됩니다.", data.getRoomName());
 
                     }
                 }
@@ -568,6 +568,8 @@ public class DrawingServer extends JFrame {
 /*                    // 클라이언트 소켓이 종료될 때 MODE_LOGOUT 메시지 처리
                     etc.SketchingData logoutData = new etc.SketchingData(etc.SketchingData.MODE_LOGOUT, data.getUserID(), clientSocket.getInetAddress().toString());
                     broadcastOthers(logoutData, this);*/
+                    // 클라이언트 연결 종료 메시지 출력
+                    printDisplay("클라이언트가 연결을 종료했습니다: " + clientSocket.getInetAddress().getHostAddress(), "");
                     clientSocket.close();
                 } catch (IOException e) {
                     System.err.println("서버 닫기 오류> " + e.getMessage());
