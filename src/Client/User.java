@@ -18,6 +18,8 @@ public class User extends JPanel {
 //        scoreLabel = new JLabel("점수: " + score);
         userLabel = new JLabel();
         scoreLabel = new JLabel();
+        userLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        scoreLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(userLabel);
         add(scoreLabel);
         setPreferredSize(new Dimension(200, 50)); // 패널의 고정 크기 설정
@@ -33,7 +35,7 @@ public class User extends JPanel {
             userLabel.setText("");
             scoreLabel.setText("");
         } else {
-            userLabel.setText("  ID: " + userId);
+            userLabel.setText("ID: " + userId);
             scoreLabel.setText("점수: " + score);
         }
 
