@@ -49,6 +49,9 @@ public class ChatingListPanel extends JPanel {
             case SYSTEM_MESSAGE: // 시스템 메시지
                 message = "[시스템] " + message;
                 break;
+            case ANSWER_MESSAGE: // 정답 메시지
+                message = "[정답] " + message;
+                break;
         }
         chatModel.addElement(message);
 
@@ -80,9 +83,11 @@ public class ChatingListPanel extends JPanel {
 
             // 각 채팅 메시지에 색을 입히는 로직
             if (message.startsWith("나:")) {
-                component.setBackground(Color.CYAN); // 본인이 입력한 메시지의 색상 설정
+                component.setBackground(new Color(158, 255, 255)); // 본인이 입력한 메시지의 색상 설정
             } else if (message.startsWith("[시스템]")) {
                 component.setBackground(Color.WHITE); // 시스템 메시지의 색상 설정
+            } else if (message.startsWith("[정답]")) {
+                component.setBackground(new Color(250, 117, 117)); // 정답 메시지의 색상 설정
             } else {
                 component.setBackground(Color.LIGHT_GRAY); // 다른 사용자가 입력한 메시지의 색상 설정
             }
