@@ -5,11 +5,13 @@ import java.awt.*;
 
 public class User extends JPanel {
     private String userId = "";
+    private String myId = "";
     private int score = 0;
     private JLabel userLabel;
     private JLabel scoreLabel;
 
-    public User() {
+    public User(String myId) {
+        this.myId = myId;
         setLayout(new GridLayout(0, 2));
 //        userLabel = new JLabel("  ID: " + userId);
 //        scoreLabel = new JLabel("점수: " + score);
@@ -25,6 +27,7 @@ public class User extends JPanel {
     public void setUser(String userId, int score) {
         this.userId = userId;
         this.score = score;
+
         if (userId.isEmpty()) { // 접속한 플레이어만 ID와 점수를 표시하도록 하기위함
             userLabel.setText("");
             scoreLabel.setText("");
@@ -32,6 +35,12 @@ public class User extends JPanel {
             userLabel.setText("  ID: " + userId);
             scoreLabel.setText("점수: " + score);
         }
+
+        if (userId.equals(myId)) {
+            setBorder(BorderFactory.createLineBorder(Color.MAGENTA, 3)); // 테두리 설정
+            
+        }
+
     }
 
     public String getUserId() {
