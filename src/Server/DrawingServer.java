@@ -359,6 +359,9 @@ public class DrawingServer extends JFrame {
                                     broadcast(new SketchingData(SketchingData.GAME_OVER, data.getRoomName(), winner, userIdList, userscoreList, sortedMap));
 
                                     printDisplay(data.getUserID() + " 방의 게임을 종료합니다.", data.getRoomName());
+
+                                    // 해당 방의 상태를 게임 중이 아님으로 변경
+                                    isGameMap.put(data.getRoomName(), false);
                                 }
                             }
                         }
@@ -409,7 +412,16 @@ public class DrawingServer extends JFrame {
                     else if (data.getMode() == SketchingData.ENTER_ROOM) {
                         // 전달받은 roomName 속성을 통해 방을 찾고 해당 Client.DrawingClient 불러오기
                         // 입장하고자 하는 방의 이름을 받아 value인 Map 업데이트 한 후 put
+
                         this.roomName = data.getRoomName(); // roomName 설정
+
+
+                        // 해당 입장하는 방의 상태가 게임 중일때는 접속 불가
+                        if (isGameMap.get(data.getRoomName())) {
+                            broadcast(new SketchingData(data.getMode(), data.getRoomName(), data.getOwnerName(), data.getIPAddress(), data.getPortNumber(), false));
+                            continue;
+                        }
+
                         // 방의 이름을 받아서 Map 객체를 꺼내와 put으로 업데이트
                         rooms.get(data.getRoomName()).put(data.getOwnerName(), 0);
                         for (String roomName : rooms.keySet()) {
@@ -463,6 +475,8 @@ public class DrawingServer extends JFrame {
                                 // 게임 시작을 클라이언트들에게 통지
                                 broadcast(new SketchingData(SketchingData.GAME_START, data.getRoomName()));
                                 printDisplay(data.getRoomName() + " 에서 게임이 시작되었습니다.", data.getRoomName());
+                                // 해당 게임 방의 상태를 게임중으로 변경
+                                isGameMap.put(data.getRoomName(), true);
 
                                 // 바로 라운드 시작
                                 // word => 제시어

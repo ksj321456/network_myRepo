@@ -119,7 +119,7 @@ public class LobbyClient extends JFrame {
                         }
                         // 그렇지 않으면 입장 불가 -> 다이얼로그로 입장 불가 메세지 표시
                         else {
-                            JOptionPane.showMessageDialog(null, "방이 이미 가득찼으므로 입장할 수 없습니다.");
+                            JOptionPane.showMessageDialog(null, "방이 이미 가득찼거나 게임 중이므로 입장할 수 없습니다.");
                         }
                     }
                 } catch (IOException e) {
