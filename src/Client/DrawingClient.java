@@ -447,7 +447,7 @@ public class DrawingClient extends JFrame {
                                 int y2 = (drawPanel.getHeight() - imageLabel2.getHeight()) / 2;
                                 imageLabel2.setLocation(x2, y2); // 위치 설정
                                 drawPanel.add(imageLabel2); // drawPanel에 추가
-                                drawPanel.repaint();
+
 
                                 // 정답자 표시 JLabel 생성
                                 JLabel nobodyLabel = new JLabel("아무도 정답을 맞추지 못했습니다! 정답은 <" + data.getPrevWord() + "> 입니다!");
@@ -460,7 +460,7 @@ public class DrawingClient extends JFrame {
                                 int nobodyLabelY = 50;
                                 nobodyLabel.setLocation(nobodyLabelX, nobodyLabelY);
                                 drawPanel.add(nobodyLabel); // drawPanel에 추가
-
+                                drawPanel.repaint();
                                 String painter = data.getRoomName();
                                 chatingListPanel.addMessage("아무도 정답을 맞추지 못했습니다!", ChatType.SYSTEM_MESSAGE);
                                 String msg = String.format("정답은 <%s> 입니다!", data.getPrevWord());
