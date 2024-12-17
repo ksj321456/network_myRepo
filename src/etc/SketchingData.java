@@ -23,6 +23,7 @@ public class SketchingData implements Serializable {
     public static final int SHOW_ROOM_LIST = 12;        // 새로운 클라이언트에게 방의 리스트들을 보여주는 모드
     public static final int ENTER_ROOM = 13;        // 방에 입장하는 모드
     public static final int MODE_NOBODY_CORRECT = 14; // 아무도 제시어를 맞추지 못했을 때의 모드
+    public static final int MODE_ENTERSOUND = 15; // 플레이어 입장시의 입장효과음 play를 위한 모드
 
     private Line line;
     private int mode;
@@ -35,6 +36,7 @@ public class SketchingData implements Serializable {
     private String IPAddress;
     private int portNumber;
     private Vector<String> roomList;
+    private String prevWord;
 
     // 방에 접속해 있는 클라이언트들의 수
     private Vector<Integer> userCnt;
@@ -45,12 +47,23 @@ public class SketchingData implements Serializable {
     // 준비완료 요청이 성공됐는지
     private boolean isSuccess;
 
+    // 입장 효과음인지
+    private boolean isEnterSound;
+
     private SortedMap<String, Integer> sortedMap;
 
     // 로그인, 로그아웃용 생성자 + 게임 시작을 알리는 프로토콜
+
     public SketchingData(int mode, String userID) {
         this.mode = mode;
         this.userID = userID;
+    }
+
+    //입장 효과음을 위한 프로토콜
+    public SketchingData(int mode, String roomName, Boolean isEnterSound) {
+        this.mode = mode;
+        this.roomName = roomName;
+        this.isEnterSound = isEnterSound;
     }
 
 /*    // 아무도 제시어를 맞추지 못했을 때의 프로토콜
@@ -89,12 +102,21 @@ public class SketchingData implements Serializable {
 
     // 채팅 메시지 전송시 생성자
     // 서버에서 라운드 전송시 생성자 => userID는 방 이름, message는 제시어, roomName은 화가의 userID
-    // + 아무도 제시어를 맞추지 못했을 때의 생성자
+
     public SketchingData(int mode, String userID, String message, String roomName) {
         this.mode = mode;
         this.userID = userID;
         this.message = message;
         this.roomName = roomName;
+    }
+
+    // + 아무도 제시어를 맞추지 못했을 때의 생성자
+    public SketchingData(int mode, String userID, String message, String roomName, String prevWord) {
+        this.mode = mode;
+        this.userID = userID;
+        this.message = message;
+        this.roomName = roomName;
+        this.prevWord = prevWord;
     }
 
     // 플레이어&점수리스트 전송용 생성자
@@ -222,4 +244,9 @@ public class SketchingData implements Serializable {
     public SortedMap<String, Integer> getSortedMap() {
         return sortedMap;
     }
+
+    public String getPrevWord() {
+        return prevWord;
+    }
+
 }

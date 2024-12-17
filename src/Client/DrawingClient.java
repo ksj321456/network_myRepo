@@ -320,7 +320,6 @@ public class DrawingClient extends JFrame {
                                     System.out.println("score: " + score);
                                 }
                                 updateUserPanel(userIDList, userScoreList);
-                                BgmManager.playAudio(5);
                                 break;
 
                             case SketchingData.MODE_INDIVIDUAL_READY:
@@ -448,10 +447,10 @@ public class DrawingClient extends JFrame {
                                 int y2 = (drawPanel.getHeight() - imageLabel2.getHeight()) / 2;
                                 imageLabel2.setLocation(x2, y2); // 위치 설정
                                 drawPanel.add(imageLabel2); // drawPanel에 추가
-                                drawPanel.repaint();
+
 
                                 // 정답자 표시 JLabel 생성
-                                JLabel nobodyLabel = new JLabel("아무도 정답을 맞추지 못했습니다! 정답은 <" + data.getMessage() + "> 였습니다!");
+                                JLabel nobodyLabel = new JLabel("아무도 정답을 맞추지 못했습니다! 정답은 <" + data.getPrevWord() + "> 입니다!");
                                 nobodyLabel.setFont(new Font("맑은 고딕", Font.BOLD, 15)); // 폰트 설정
                                 nobodyLabel.setForeground(Color.RED); // 색상 설정
                                 nobodyLabel.setSize(500, 50); // 크기 설정
@@ -461,10 +460,10 @@ public class DrawingClient extends JFrame {
                                 int nobodyLabelY = 50;
                                 nobodyLabel.setLocation(nobodyLabelX, nobodyLabelY);
                                 drawPanel.add(nobodyLabel); // drawPanel에 추가
-
+                                drawPanel.repaint();
                                 String painter = data.getRoomName();
                                 chatingListPanel.addMessage("아무도 정답을 맞추지 못했습니다!", ChatType.SYSTEM_MESSAGE);
-                                String msg = String.format("정답은 %s 였습니다!", data.getMessage());
+                                String msg = String.format("정답은 <%s> 입니다!", data.getPrevWord());
                                 chatingListPanel.addMessage(msg, ChatType.ANSWER_MESSAGE);
                                 chatingListPanel.addMessage(painter + "님이 다시 화가로 플레이합니다.", ChatType.SYSTEM_MESSAGE);
 
@@ -517,6 +516,10 @@ public class DrawingClient extends JFrame {
                                 nobodyTimer.start();
                                 break;
 
+                            // 플레이어 입장시 입장 bgm 재생
+                            case SketchingData.MODE_ENTERSOUND:
+                                BgmManager.playAudio(5);
+                                break;
 
                             case SketchingData.GAME_OVER:
                                 countDownBar.stop(); // 게임 종료 시 카운트다운 멈춤
@@ -547,6 +550,12 @@ public class DrawingClient extends JFrame {
                                 canDrawing = false;
                                 // 준비완료 false
                                 isReady = false;
+
+                                // Painter 클라이언트의 채팅 버튼과 텍스트 필드 활성화
+                                inputPanel.getT_input().setEnabled(true);
+                                inputPanel.getB_send().setEnabled(true);
+
+                                prevPainter = ""; // 이전 라운드의 화가 정보 초기화
                                 break;
                         }
                     }
@@ -587,6 +596,7 @@ public class DrawingClient extends JFrame {
     public void disconnect() {
         send(new SketchingData(SketchingData.MODE_LOGOUT, userId));
         BgmManager.stopAudio(4);
+        BgmManager.setVolume(4, 0.1f);
         try {
             if (out != null) {
                 out.close();

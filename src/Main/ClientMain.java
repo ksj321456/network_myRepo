@@ -51,7 +51,8 @@ public class ClientMain extends JFrame {
         l_Title.setFont(new Font("Comic Sans MS", Font.BOLD, 40));
 
         // JLabel의 크기를 텍스트에 맞게 조절
-        l_Title.setSize(l_Title.getPreferredSize());
+        l_Title.setSize(400, 60);
+        //l_Title.setSize(l_Title.getPreferredSize());
         l_Title.setLocation(85, 30); // 제목 위치 조정
 
 
@@ -125,6 +126,7 @@ public class ClientMain extends JFrame {
         t_PortNumber.setHorizontalAlignment(SwingConstants.CENTER);
         t_PortNumber.setColumns(10);
         t_PortNumber.setBounds(254, 292, 116, 33);
+        t_PortNumber.setEditable(false); // 포트번호 수정 불가
         mainPanel.add(t_PortNumber);
 
         JButton startButton = new JButton("Let's Start!");
