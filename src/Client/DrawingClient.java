@@ -450,7 +450,7 @@ public class DrawingClient extends JFrame {
                                 drawPanel.repaint();
 
                                 // 정답자 표시 JLabel 생성
-                                JLabel nobodyLabel = new JLabel("아무도 정답을 맞추지 못했습니다! 정답은 <" + data.getPrevWord() + "> 였습니다!");
+                                JLabel nobodyLabel = new JLabel("아무도 정답을 맞추지 못했습니다! 정답은 <" + data.getPrevWord() + "> 입니다!");
                                 nobodyLabel.setFont(new Font("맑은 고딕", Font.BOLD, 15)); // 폰트 설정
                                 nobodyLabel.setForeground(Color.RED); // 색상 설정
                                 nobodyLabel.setSize(500, 50); // 크기 설정
@@ -550,6 +550,12 @@ public class DrawingClient extends JFrame {
                                 canDrawing = false;
                                 // 준비완료 false
                                 isReady = false;
+
+                                // Painter 클라이언트의 채팅 버튼과 텍스트 필드 활성화
+                                inputPanel.getT_input().setEnabled(true);
+                                inputPanel.getB_send().setEnabled(true);
+
+                                prevPainter = ""; // 이전 라운드의 화가 정보 초기화
                                 break;
                         }
                     }
