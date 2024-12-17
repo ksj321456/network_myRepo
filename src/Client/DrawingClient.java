@@ -596,6 +596,7 @@ public class DrawingClient extends JFrame {
     public void disconnect() {
         send(new SketchingData(SketchingData.MODE_LOGOUT, userId));
         BgmManager.stopAudio(4);
+        BgmManager.setVolume(4, 0.1f);
         try {
             if (out != null) {
                 out.close();
