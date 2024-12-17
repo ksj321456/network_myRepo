@@ -125,6 +125,7 @@ public class ClientMain extends JFrame {
         t_PortNumber.setHorizontalAlignment(SwingConstants.CENTER);
         t_PortNumber.setColumns(10);
         t_PortNumber.setBounds(254, 292, 116, 33);
+        t_PortNumber.setEditable(false); // 포트번호 수정 불가
         mainPanel.add(t_PortNumber);
 
         JButton startButton = new JButton("Let's Start!");
